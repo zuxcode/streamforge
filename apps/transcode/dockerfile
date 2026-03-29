@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# Stage 1: install dependencies
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS deps
+
+WORKDIR /app
+
+COPY package.json bun.lockb* ./
+COPY apps/transcode/package.json ./apps/transcode/
+COPY packages/types/package.json ./packages/types/
+COPY packages/config/package.json ./packages/config/
+COPY packages/queue/package.json ./packages/queue/
+COPY packages/storage/package.json ./packages/storage/
+
+RUN bun install --frozen-lockfile --production
+
+# ---------------------------------------------------------------------------
+# Stage 2: build
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS build
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN bun build apps/transcode/src/index.ts \
+      --outdir apps/transcode/dist \
+      --target bun \
+      --minify
+
+# ---------------------------------------------------------------------------
+# Stage 3: runtime (includes ffmpeg)
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS runtime
+
+# Install ffmpeg — required for HLS transcoding
+RUN apk add --no-cache ffmpeg
+
+WORKDIR /app
+
+RUN addgroup -S streamforge && adduser -S -G streamforge streamforge
+
+# Writable temp directory for transcoding working files
+RUN mkdir -p /tmp/streamforge && chown streamforge:streamforge /tmp/streamforge
+
+COPY --from=build --chown=streamforge:streamforge /app/apps/transcode/dist ./dist
+
+USER streamforge
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+  CMD wget -qO- http://localhost:3001/health || exit 1
+
+CMD ["bun", "run", "dist/index.js"]

@@ -9,11 +9,11 @@ This document outlines the planned development phases for streamforge. Each phas
 
 ### Monorepo & Tooling
 - [X] Initialise Bun workspace with `package.json` at root
-- [ ] Create `tsconfig.base.json` with `strict: true` and shared path aliases
-- [ ] Create `bunfig.toml` with workspace-aware resolution
-- [ ] Add `.gitignore` covering `node_modules`, `.env`, `dist`, temp files
-- [ ] Scaffold `apps/ingest`, `apps/transcode`, `apps/serve` with empty `index.ts` and `package.json`
-- [ ] Scaffold `packages/@streamforge/types`, `queue`, `storage`, `config` with empty entry points
+- [X] Create `tsconfig.base.json` with `strict: true` and shared path aliases
+- [X] Create `bunfig.toml` with workspace-aware resolution
+- [X] Add `.gitignore` covering `node_modules`, `.env`, `dist`, temp files
+- [X] Scaffold `apps/ingest`, `apps/transcode`, `apps/serve` with empty `index.ts` and `package.json`
+- [X] Scaffold `packages/@streamforge/types`, `queue`, `storage`, `config` with empty entry points
 
 ### Shared Packages
 - [ ] `@streamforge/types` — define `TranscodeJob`, `JobStatus`, `HlsOutput` interfaces

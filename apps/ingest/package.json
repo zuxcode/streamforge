@@ -1,0 +1,26 @@
+{
+  "name": "@streamforge/ingest",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun run dist/index.js",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@streamforge/config": "workspace:*",
+    "@streamforge/queue": "workspace:*",
+    "@streamforge/storage": "workspace:*",
+    "@streamforge/types": "workspace:*",
+    "hono": "^4.12.9",
+    "bullmq": "^5.7.1",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.4.5"
+  }
+}

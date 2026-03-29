@@ -1,0 +1,51 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# Stage 1: install dependencies
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS deps
+
+WORKDIR /app
+
+COPY package.json bun.lockb* ./
+COPY apps/serve/package.json ./apps/serve/
+COPY packages/types/package.json ./packages/types/
+COPY packages/config/package.json ./packages/config/
+COPY packages/storage/package.json ./packages/storage/
+
+RUN bun install --frozen-lockfile --production
+
+# ---------------------------------------------------------------------------
+# Stage 2: build
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS build
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN bun build apps/serve/src/index.ts \
+      --outdir apps/serve/dist \
+      --target bun \
+      --minify
+
+# ---------------------------------------------------------------------------
+# Stage 3: runtime
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS runtime
+
+WORKDIR /app
+
+RUN addgroup -S streamforge && adduser -S -G streamforge streamforge
+
+COPY --from=build --chown=streamforge:streamforge /app/apps/serve/dist ./dist
+
+USER streamforge
+
+EXPOSE 3002
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+  CMD wget -qO- http://localhost:3002/health || exit 1
+
+CMD ["bun", "run", "dist/index.js"]
