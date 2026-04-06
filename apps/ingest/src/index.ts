@@ -5,8 +5,8 @@ import { trimTrailingSlash } from "hono/trailing-slash";
 import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
 
-// import { logger } from "@lib/logger";
-// import { env } from "@/env";
+import { createLogger } from "@streamforge/logger";
+import { envIngest, envShared } from "@streamforge/env";
 // import { queue, redis } from "@feat/video-processor/queue";
 // import { streamRouter } from "@feat/stream/routes/hls";
 // import { videoProcessorRouter } from "@feat/video-processor/routes";
@@ -14,6 +14,8 @@ import { cors } from "hono/cors";
 
 // ====================== App Setup ======================
 const app = new Hono();
+
+const logger = createLogger("ingest-api");
 
 // Middleware
 app.use(honoLogger());
@@ -29,6 +31,17 @@ app.use("*", prettyJSON());
 if (process.env.NODE_ENV !== "production") {
   showRoutes(app);
 }
+
+app.use("*", async (c, next) => {
+  const start = Date.now();
+  await next();
+  logger.info({
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+    durationMs: Date.now() - start,
+  }, "request");
+});
 
 // ====================== Routes ======================
 // GET /health
@@ -58,25 +71,26 @@ app.onError((err, c) => {
   );
 });
 
-app.notFound((c) => c.json({ error: "Not found" }, 404));
+app.notFound((c) =>
+  c.json({ error: { code: "NOT_FOUND", message: "Route not found." } }, 404)
+);
 
 // ====================== Start Server ======================
 
-const server = Bun.serve({
-  port: env.PORT,
-  fetch: app.fetch,
-});
+const server = Bun.serve({ port: ingestConfig.port, fetch: app.fetch });
 
 logger.info({
-  service: "HLS Video Processing API",
-  url: `http://0.0.0.0:${env.PORT}`,
+  service: "streamforge ingest API",
+  url: `http://0.0.0.0:${ingestConfig.port}`,
   routes: [
     "POST /transcode          → Async (BullMQ)",
-    "POST /transcode/sync     → Synchronous",
     "GET /jobs/:id            → Job status",
     "GET /health              → Health check",
   ],
-});
+  port: ingestConfig.port,
+  nodeEnv: sharedConfig.nodeEnv,
+  maxUploadSizeBytes: ingestConfig.maxUploadSize,
+}, "ingest service started");
 
 // ====================== Graceful Shutdown ======================
 const shutdown = async (signal: string) => {

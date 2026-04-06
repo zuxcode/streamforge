@@ -11,16 +11,13 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@streamforge/config": "workspace:*",
+    "@streamforge/env": "workspace:*",
     "@streamforge/queue": "workspace:*",
     "@streamforge/storage": "workspace:*",
     "@streamforge/types": "workspace:*",
+    "@streamforge/logger": "workspace:*",
     "hono": "^4.12.9",
     "bullmq": "^5.7.1",
     "ioredis": "^5.4.1"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5.4.5"
   }
 }
