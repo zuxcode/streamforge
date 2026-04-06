@@ -16,10 +16,10 @@ This document outlines the planned development phases for streamforge. Each phas
 - [X] Scaffold `packages/@streamforge/types`, `queue`, `storage`, `config` with empty entry points
 
 ### Shared Packages
-- [ ] `@streamforge/types` — define `TranscodeJob`, `JobStatus`, `HlsOutput` interfaces
-- [ ] `@streamforge/config` — env schema with validation; crash on missing required vars
-- [ ] `@streamforge/queue` — BullMQ queue name constants, job type definitions, producer helper
-- [ ] `@streamforge/storage` — `bun:s3` client wrapper with `upload`, `download`, `exists`, `delete`
+- [X] `@streamforge/types` — define `TranscodeJob`, `JobStatus`, `HlsOutput` interfaces
+- [X] `@streamforge/config` — env schema with validation; crash on missing required vars
+- [X] `@streamforge/queue` — BullMQ queue name constants, job type definitions, producer helper
+- [X] `@streamforge/storage` — `bun:s3` client wrapper with `upload`, `download`, `exists`, `delete`
 
 ### `ingest` — Skeleton
 - [ ] Hono app boots on `INGEST_PORT`
@@ -49,9 +49,9 @@ This document outlines the planned development phases for streamforge. Each phas
 - [ ] `GET /health` returns `200 OK`
 
 ### Infrastructure
-- [ ] `Dockerfile` for each service (Bun base image, non-root user)
-- [ ] `docker-compose.yml` — wires `ingest`, `transcode`, `serve`, Redis, and a local S3-compatible service
-- [ ] `.env.example` with all required variables documented
+- [X] `Dockerfile` for each service (Bun base image, non-root user)
+- [X] `docker-compose.yml` — wires `ingest`, `transcode`, `serve`, Redis, and a local S3-compatible service
+- [X] `.env.example` with all required variables documented
 
 ### Milestone
 > A `.mp4` uploaded to `ingest` is transcoded by `transcode` and playable via `serve` using a local HLS player. All three services run via `docker compose up`.

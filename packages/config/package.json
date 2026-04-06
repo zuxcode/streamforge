@@ -1,19 +1,16 @@
 {
   "name": "@streamforge/config",
   "version": "0.0.1",
+  "main": "index.ts",
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
   "private": true,
-  "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
-  "dependencies": {
-    "@streamforge/types": "workspace:*"
-  },
-  "devDependencies": {
-    "typescript": "^5.4.5"
-  }
+  "type": "module",
+  "types": "index.ts"
 }

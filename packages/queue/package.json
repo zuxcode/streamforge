@@ -1,0 +1,22 @@
+{
+  "name": "@streamforge/queue",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@streamforge/types": "workspace:*",
+    "bullmq": "5.71.1",
+    "ioredis": "5.10.1",
+    "uuid": "13.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
