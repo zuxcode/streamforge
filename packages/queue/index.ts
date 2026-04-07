@@ -16,9 +16,8 @@
 // ---------------------------------------------------------------------------
 
 import type { TranscodeJob } from "@streamforge/types";
-import { type ConnectionOptions, Queue } from "bullmq";
-import IORedis from "ioredis";
-import { v4 as uuidv4 } from "uuid";
+import { Queue } from "bullmq";
+import IORedis, { type Cluster, type Redis } from "ioredis";
 
 // ---------------------------------------------------------------------------
 // Queue names
@@ -84,7 +83,7 @@ export const JOB_OPTIONS = {
 //   enableOfflineQueue: false   — prevents commands piling up while offline
 // ---------------------------------------------------------------------------
 
-export function createRedisConnection(redisUrl: string): ConnectionOptions {
+export function createRedisConnection(redisUrl: string): IORedis {
     const url = new URL(redisUrl);
 
     const connection = new IORedis({
@@ -114,9 +113,11 @@ export function createRedisConnection(redisUrl: string): ConnectionOptions {
 // directly — it does not need a Queue instance.
 // ---------------------------------------------------------------------------
 
-export function createTranscodeQueue(redisUrl: string): Queue<TranscodeJob> {
+export function createTranscodeQueue(
+    connection: Redis | Cluster,
+): Queue<TranscodeJob> {
     return new Queue<TranscodeJob>(QUEUE_NAMES.transcode, {
-        connection: createRedisConnection(redisUrl),
+        connection,
         // Apply retry/backoff/retention policy at the Queue level so individual
         // add() calls don't need to repeat it. The jobId is NOT set here —
         // it is unique per payload and passed per add() call in enqueueTranscodeJob.
@@ -213,6 +214,10 @@ export async function getQueueDepth(
  * Call this during service shutdown after draining in-flight HTTP requests.
  * Safe to call multiple times — subsequent calls are no-ops.
  */
-export async function closeQueue(queue: Queue<TranscodeJob>): Promise<void> {
+export async function closeQueue(
+    queue: Queue<TranscodeJob>,
+    redisConnection: IORedis,
+): Promise<void> {
     await queue.close();
+    await redisConnection.quit();
 }

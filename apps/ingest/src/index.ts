@@ -6,10 +6,9 @@ import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
 
 import { createLogger } from "@streamforge/logger";
-import { envIngest, envShared } from "@streamforge/env";
-// import { queue, redis } from "@feat/video-processor/queue";
-// import { streamRouter } from "@feat/stream/routes/hls";
-// import { videoProcessorRouter } from "@feat/video-processor/routes";
+import { ingestEnv, sharedEnv } from "@streamforge/env";
+import { closeTranscodeQueue } from "./queues/queue-client";
+import { handleUpload } from "./routes/upload";
 // import { queueRoute } from "./lib/queue-ui";
 
 // ====================== App Setup ======================
@@ -23,8 +22,6 @@ app.use(trimTrailingSlash());
 app.use("*", cors());
 app.use("*", prettyJSON());
 
-// app.route("/stream", streamRouter);
-// app.route("/video", videoProcessorRouter);
 // app.route("/", queueRoute);
 
 // Show registered routes in console (development only)
@@ -55,6 +52,26 @@ app.get("/health", (c) => {
   });
 });
 
+// Upload — requires a valid token AND admin role
+//
+// authMiddleware calls the external auth service (with caching) and sets
+// c.get("user"). requireAdminRole() then checks the role claim.
+// Non-admins: 403. Missing/invalid token: 401.
+app.post(
+  "/upload",
+  handleUpload,
+  // authMiddleware,
+  // async (c) => {
+  //   const user = c.get("user");
+  //   try {
+  //     requireAdminRole(user);
+  //   } catch (err) {
+  //     return authErrorResponse(c, err);
+  //   }
+  //   return handleUpload(c);
+  // },
+);
+
 // ====================== Global Error Handler ======================
 app.onError((err, c) => {
   console.log(err);
@@ -77,19 +94,19 @@ app.notFound((c) =>
 
 // ====================== Start Server ======================
 
-const server = Bun.serve({ port: ingestConfig.port, fetch: app.fetch });
+const server = Bun.serve({ port: ingestEnv.INGEST_PORT, fetch: app.fetch });
 
 logger.info({
   service: "streamforge ingest API",
-  url: `http://0.0.0.0:${ingestConfig.port}`,
+  url: `http://0.0.0.0:${ingestEnv.INGEST_PORT}`,
   routes: [
     "POST /transcode          → Async (BullMQ)",
     "GET /jobs/:id            → Job status",
     "GET /health              → Health check",
   ],
-  port: ingestConfig.port,
-  nodeEnv: sharedConfig.nodeEnv,
-  maxUploadSizeBytes: ingestConfig.maxUploadSize,
+  port: ingestEnv.INGEST_PORT,
+  nodeEnv: sharedEnv.NODE_ENV,
+  maxUploadSizeBytes: ingestEnv.INGEST_MAX_UPLOAD_SIZE,
 }, "ingest service started");
 
 // ====================== Graceful Shutdown ======================
@@ -101,8 +118,7 @@ const shutdown = async (signal: string) => {
   try {
     logger.debug("Delaying shutdown (background grace period)...");
     // Close resources here (uncomment when you have them)
-    await queue.close();
-    await redis.quit();
+    await closeTranscodeQueue();
 
     logger.info("All resources closed. Shutting down...");
     process.exit(0);

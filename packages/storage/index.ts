@@ -61,7 +61,7 @@ export interface StorageClientConfig {
     accessKeyId: string;
     secretAccessKey: string;
     /** Custom endpoint for local S3-compatible services (e.g. MinIO). */
-    endpoint?: string;
+    endpoint?: string | undefined;
     /**  Use virtual hosted style endpoint. default to false, when true if endpoint is informed it will ignore the bucket */
     virtualHostedStyle?: boolean;
 }

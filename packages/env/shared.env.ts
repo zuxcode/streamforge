@@ -24,6 +24,8 @@ export const sharedEnv = createEnv({
             "development",
         ),
         LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+
+        SF_VERBOSE: z.boolean().default(false),
     },
 
     runtimeEnv: process.env,

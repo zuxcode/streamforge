@@ -21,6 +21,7 @@
         "bullmq": "^5.7.1",
         "hono": "^4.12.9",
         "ioredis": "^5.4.1",
+        "uuid": "13.0.0",
       },
     },
     "apps/serve": {
@@ -88,7 +89,6 @@
         "@streamforge/types": "workspace:*",
         "bullmq": "5.71.1",
         "ioredis": "5.10.1",
-        "uuid": "13.0.0",
       },
       "devDependencies": {
         "typescript": "^5.4.5",
