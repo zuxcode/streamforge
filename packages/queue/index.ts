@@ -16,8 +16,22 @@
 // ---------------------------------------------------------------------------
 
 import type { TranscodeJob } from "@streamforge/types";
+import { sharedEnv } from "@streamforge/env";
+import { createLogger } from "@streamforge/logger";
 import { Queue } from "bullmq";
 import IORedis, { type Cluster, type Redis } from "ioredis";
+
+const logger = createLogger("queue");
+
+export const logConnection = (name: string) => {
+    return {
+        connect: () => logger.info(`✅ ${name} connected to Redis`),
+        error: (err: Error) => logger.error(err, `❌ ${name} Redis error:`),
+        close: () => logger.warn(`⚠️ ${name} Redis connection closed`),
+        reconnecting: () => logger.info(`🔄 ${name} reconnecting to Redis...`),
+        connecting: () => logger.info(`🔄 ${name} connecting to Redis...`),
+    };
+};
 
 // ---------------------------------------------------------------------------
 // Queue names
@@ -83,7 +97,10 @@ export const JOB_OPTIONS = {
 //   enableOfflineQueue: false   — prevents commands piling up while offline
 // ---------------------------------------------------------------------------
 
-export function createRedisConnection(redisUrl: string): IORedis {
+export function createRedisConnection(
+    redisUrl: string,
+    enableReadyCheck: boolean = true,
+): IORedis {
     const url = new URL(redisUrl);
 
     const connection = new IORedis({
@@ -97,9 +114,22 @@ export function createRedisConnection(redisUrl: string): IORedis {
         // Required by BullMQ — it manages reconnection state itself
         enableOfflineQueue: false,
         maxRetriesPerRequest: null,
+
+        enableReadyCheck: enableReadyCheck, // Recommended for workers
+
         // Enable TLS for rediss:// (Redis over TLS, e.g. cloud-managed Redis)
         tls: url.protocol === "rediss:" ? {} : undefined,
     });
+
+    if (sharedEnv.SF_VERBOSE) {
+        logger.debug({ redisUrl }, "Created Redis connection");
+    }
+
+    connection.on("connecting", logConnection("Queue").connecting);
+    connection.on("connect", logConnection("Queue").connect);
+    connection.on("error", logConnection("Queue").error);
+    connection.on("close", logConnection("Queue").close);
+    connection.on("reconnecting", logConnection("Queue").reconnecting);
 
     return connection;
 }
@@ -116,13 +146,22 @@ export function createRedisConnection(redisUrl: string): IORedis {
 export function createTranscodeQueue(
     connection: Redis | Cluster,
 ): Queue<TranscodeJob> {
-    return new Queue<TranscodeJob>(QUEUE_NAMES.transcode, {
+    const queue = new Queue<TranscodeJob>(QUEUE_NAMES.transcode, {
         connection,
         // Apply retry/backoff/retention policy at the Queue level so individual
         // add() calls don't need to repeat it. The jobId is NOT set here —
         // it is unique per payload and passed per add() call in enqueueTranscodeJob.
         defaultJobOptions: JOB_OPTIONS.transcode,
     });
+
+    if (sharedEnv.SF_VERBOSE) {
+        logger.debug({
+            name: QUEUE_NAMES.transcode,
+            config: JOB_OPTIONS.transcode,
+        }, "Created Bullmq Queue");
+    }
+
+    return queue;
 }
 
 // ---------------------------------------------------------------------------
@@ -181,6 +220,13 @@ export async function enqueueTranscodeJob(
     const deduplicated = job.timestamp !== undefined &&
         Date.now() - job.timestamp > 1_000;
 
+    logger.info({
+        payloajobId: job.id,
+        filename: payload.originalFilename,
+        queueName: QUEUE_NAMES.transcode,
+        deduplicated,
+    }, "Job enqueued");
+
     return {
         jobId: payload.jobId,
         queueName: QUEUE_NAMES.transcode,
@@ -203,7 +249,12 @@ export async function getQueueDepth(
         const counts = await queue.getJobCounts("waiting", "active", "delayed");
         return (counts.waiting ?? 0) + (counts.active ?? 0) +
             (counts.delayed ?? 0);
-    } catch {
+    } catch (error) {
+        if (sharedEnv.SF_VERBOSE) {
+            logger.error({
+                error,
+            }, "Failed to get queue depth");
+        }
         // Swallow — depth is observability-only, never load-bearing
         return -1;
     }

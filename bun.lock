@@ -42,7 +42,8 @@
       "name": "@streamforge/transcode",
       "version": "0.0.1",
       "dependencies": {
-        "@streamforge/config": "workspace:*",
+        "@streamforge/env": "workspace:*",
+        "@streamforge/logger": "workspace:*",
         "@streamforge/queue": "workspace:*",
         "@streamforge/storage": "workspace:*",
         "@streamforge/types": "workspace:*",
@@ -52,6 +53,16 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "typescript": "^5.4.5",
+      },
+    },
+    "packages/auth": {
+      "name": "@streamforge/auth",
+      "version": "0.0.1",
+      "dependencies": {
+        "@streamforge/types": "workspace:*",
+      },
+      "devDependencies": {
         "typescript": "^5.4.5",
       },
     },
@@ -86,6 +97,8 @@
       "name": "@streamforge/queue",
       "version": "0.0.1",
       "dependencies": {
+        "@streamforge/env": "workspace:*",
+        "@streamforge/logger": "workspace:*",
         "@streamforge/types": "workspace:*",
         "bullmq": "5.71.1",
         "ioredis": "5.10.1",
@@ -128,6 +141,8 @@
     "@msgpackr-extract/msgpackr-extract-win32-x64": ["@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3", "", { "os": "win32", "cpu": "x64" }, "sha512-x0fWaQtYp4E6sktbsdAqnehxDgEc/VwM7uLsRCYWaiGu0ykYdZPiS8zCWdnjHwyiumousxfBm4SO31eXqwEZhQ=="],
 
     "@pinojs/redact": ["@pinojs/redact@0.4.0", "", {}, "sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg=="],
+
+    "@streamforge/auth": ["@streamforge/auth@workspace:packages/auth"],
 
     "@streamforge/config": ["@streamforge/config@workspace:packages/config"],
 
@@ -256,6 +271,8 @@
     "wrappy": ["wrappy@1.0.2", "", {}, "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ=="],
 
     "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+
+    "@streamforge/auth/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@streamforge/config/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 

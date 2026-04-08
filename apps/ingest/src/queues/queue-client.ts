@@ -5,6 +5,7 @@
 // service. Keeping this in its own module makes it easy to mock in tests.
 // ---------------------------------------------------------------------------
 
+import { sharedEnv } from "@streamforge/env";
 import {
     createRedisConnection,
     createTranscodeQueue,

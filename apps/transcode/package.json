@@ -13,7 +13,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@streamforge/config": "workspace:*",
+    "@streamforge/env": "workspace:*",
+    "@streamforge/logger": "workspace:*",
     "@streamforge/queue": "workspace:*",
     "@streamforge/storage": "workspace:*",
     "@streamforge/types": "workspace:*",

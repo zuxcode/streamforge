@@ -81,3 +81,14 @@ export interface HealthResponse {
   status: "ok" | "degraded";
   dependencies?: Record<string, "ok" | "unreachable">;
 }
+
+export interface FireWebhookPayload {
+  event: "job.complete" | "job.failed";
+  jobId: string;
+  error: string | null;
+  data: {
+    masterPlaylist: string;
+    thumbnails: string[];
+    durationMs: number;
+  } | null;
+}

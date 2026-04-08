@@ -11,6 +11,7 @@ export const transcodeEnv = createEnv({
         TRANSCODE_CONCURRENCY: z.coerce.number().default(2),
         TRANSCODE_TMP_DIR: z.string().default("/tmp/streamforge"),
         TRANSCODE_SEGMENT_DURATION: z.coerce.number().default(6),
+        TRANSCODE_WEBHOOK_URL: z.url().optional(),
     },
 
     runtimeEnv: process.env,

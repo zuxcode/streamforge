@@ -1,10 +1,10 @@
-import { envGlobal } from "@streamforge/env";
+import { sharedEnv } from "@streamforge/env";
 import pino from "pino";
 
-const isProduction = Bun.env.NODE_ENV === "production";
+const isProduction = sharedEnv.NODE_ENV === "production";
 
 export const logger = pino({
-    level: envGlobal.LOG_LEVEL ?? (isProduction ? "info" : "debug"),
+    level: sharedEnv.LOG_LEVEL ?? (isProduction ? "info" : "debug"),
 
     timestamp: pino.stdTimeFunctions.isoTime,
 
@@ -23,7 +23,7 @@ export const logger = pino({
     base: {
         pid: process.pid,
         service: "streamforge",
-        env: envGlobal.NODE_ENV ?? "development",
+        env: sharedEnv.NODE_ENV ?? "development",
     },
 
     // Prevent accidental credential leakage in logs

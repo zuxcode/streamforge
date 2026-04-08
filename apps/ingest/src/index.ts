@@ -7,27 +7,44 @@ import { cors } from "hono/cors";
 
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv, sharedEnv } from "@streamforge/env";
-import { closeTranscodeQueue } from "./queues/queue-client";
+import { closeTranscodeQueue, getTranscodeQueue } from "./queues/queue-client";
 import { handleUpload } from "./routes/upload";
 // import { queueRoute } from "./lib/queue-ui";
+
+// SETUP
+getTranscodeQueue(sharedEnv.SF_REDIS_URL);
 
 // ====================== App Setup ======================
 const app = new Hono();
 
 const logger = createLogger("ingest-api");
 
+const rawOrigins = sharedEnv.SF_COR_ORIGIN;
+
+const origin =
+  rawOrigins === "*"
+    ? "*"
+    : rawOrigins.split(",").map((o) => o.trim());
+
+
 // Middleware
 app.use(honoLogger());
 app.use(trimTrailingSlash());
-app.use("*", cors());
+
+app.use(
+  "*",
+  cors({
+    origin,
+    allowMethods: ["GET", "POST", "HEAD", "OPTIONS"],
+    credentials: sharedEnv.SF_COR_ORIGIN !== "*",
+    allowHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
+  }),
+);
+
 app.use("*", prettyJSON());
 
 // app.route("/", queueRoute);
-
-// Show registered routes in console (development only)
-if (process.env.NODE_ENV !== "production") {
-  showRoutes(app);
-}
 
 app.use("*", async (c, next) => {
   const start = Date.now();
@@ -74,8 +91,6 @@ app.post(
 
 // ====================== Global Error Handler ======================
 app.onError((err, c) => {
-  console.log(err);
-
   logger.error(err, "Unhandled error");
   return c.json(
     {
@@ -131,4 +146,8 @@ const shutdown = async (signal: string) => {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
+// Show registered routes in console (development only)
+if (sharedEnv.NODE_ENV !== "production") {
+  showRoutes(app);
+}
 export { app };
