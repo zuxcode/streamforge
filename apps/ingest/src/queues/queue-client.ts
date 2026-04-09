@@ -1,39 +1,72 @@
 // ---------------------------------------------------------------------------
 // queue-client.ts
 //
-// Initialises and exports a single BullMQ Queue instance for the ingest
-// service. Keeping this in its own module makes it easy to mock in tests.
+// Provides a singleton BullMQ Queue + Redis connection for the ingest service.
+// This module ensures:
+//  - Only one Redis connection is created
+//  - Only one Queue instance is used
+//  - Clean shutdown is supported
 // ---------------------------------------------------------------------------
 
-import { sharedEnv } from "@streamforge/env";
 import {
     createRedisConnection,
     createTranscodeQueue,
+    logConnection,
 } from "@streamforge/queue";
+
 import type { TranscodeJob } from "@streamforge/types";
 import type { Queue, RedisClient } from "bullmq";
 
-let _queue: Queue<TranscodeJob> | null = null;
-let _connection: RedisClient | null = null;
+/* =========================================================
+ * Internal State (Singletons)
+ * ======================================================= */
+let connection: RedisClient | null = null;
+let queue: Queue<TranscodeJob> | null = null;
 
-export function getTranscodeQueue(redisUrl: string): Queue<TranscodeJob> {
-    if (!_connection) {
-        _connection = createRedisConnection(redisUrl);
-    }
+/* =========================================================
+ * Helpers
+ * ======================================================= */
+function attachConnectionListeners(conn: RedisClient) {
+    const log = logConnection("Queue");
 
-    if (!_queue) {
-        _queue = createTranscodeQueue(_connection);
-    }
-    return _queue;
+    conn.on("connecting", log.connecting);
+    conn.on("connect", log.connect);
+    conn.on("error", log.error);
+    conn.on("close", log.close);
+    conn.on("reconnecting", log.reconnecting);
 }
 
-export async function closeTranscodeQueue(): Promise<void> {
-    if (_queue) {
-        await _queue.close();
-        _queue = null;
+/* =========================================================
+ * Public API
+ * ======================================================= */
+
+/**
+ * Get (or create) the singleton transcode queue.
+ */
+export function getTranscodeQueue(redisUrl: string): Queue<TranscodeJob> {
+    if (!connection) {
+        connection = createRedisConnection(redisUrl);
+        attachConnectionListeners(connection);
     }
-    if (_connection) {
-        await _connection.quit();
-        _connection = null;
+
+    if (!queue) {
+        queue = createTranscodeQueue(connection);
+    }
+
+    return queue;
+}
+
+/**
+ * Gracefully closes the queue and Redis connection.
+ */
+export async function closeTranscodeQueue(): Promise<void> {
+    if (queue) {
+        await queue.close();
+        queue = null;
+    }
+
+    if (connection) {
+        await connection.quit();
+        connection = null;
     }
 }
