@@ -20,7 +20,6 @@
     "@streamforge/queue": "workspace:*",
     "@streamforge/storage": "workspace:*",
     "@streamforge/types": "workspace:*",
-    "@streamforge/utils": "workspace:*",
     "bullmq": "^5.7.1",
     "hono": "^4.12.9",
     "ioredis": "^5.4.1",

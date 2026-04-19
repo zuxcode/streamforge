@@ -8,12 +8,13 @@ FROM oven/bun:1-alpine AS deps
 WORKDIR /app
 
 # Copy workspace manifests first for layer caching
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock* ./
 COPY apps/ingest/package.json ./apps/ingest/
 COPY packages/types/package.json ./packages/types/
-COPY packages/config/package.json ./packages/config/
+COPY packages/env/package.json ./packages/env/
 COPY packages/queue/package.json ./packages/queue/
 COPY packages/storage/package.json ./packages/storage/
+COPY packages/logger/package.json ./packages/logger/
 
 RUN bun install --frozen-lockfile --production
 
@@ -46,7 +47,7 @@ COPY --from=build --chown=streamforge:streamforge /app/apps/ingest/dist ./dist
 
 USER streamforge
 
-EXPOSE 3000
+EXPOSE 3045
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
   CMD wget -qO- http://localhost:3000/health || exit 1

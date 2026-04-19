@@ -21,6 +21,8 @@
 
 import { S3Client, type S3File } from "bun";
 
+import { join } from "node:path";
+
 // ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------
@@ -76,29 +78,29 @@ export interface StorageClientConfig {
 export const s3Keys = {
     /**
      * Key for the raw uploaded video.
-     * e.g. raw/abc-123/original.mp4
+     * e.g. raw/original.mp4
      */
-    rawVideo: (jobId: string, filename: string): string =>
-        `raw/${jobId}/${filename}`,
+    rawVideo: (filename: string): string => join("raw", filename),
 
     /**
      * Key for the HLS manifest.
      * e.g. processed/abc-123/index.m3u8
      */
-    manifest: (jobId: string): string => `processed/${jobId}/index.m3u8`,
+    manifest: (filename: string): string =>
+        // join("hsl", filename, "master.m3u8"),
+        join("processed", filename, "master.m3u8"),
 
     /**
      * Key for a single HLS segment.
      * e.g. processed/abc-123/seg-000.ts
      */
-    segment: (jobId: string, index: number): string =>
-        `processed/${jobId}/seg-${String(index).padStart(3, "0")}.ts`,
+    segment: (filename: string): string => join("processed", filename),
 
     /**
      * Prefix for all processed output files for a given job.
      * Useful for listing or bulk-deleting a job's output.
      */
-    processedPrefix: (jobId: string): string => `processed/${jobId}/`,
+    processedPrefix: (filename: string): string => join("processed", filename),
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -177,6 +179,12 @@ export interface StorageClient {
      * Resolves without error if the key does not exist (idempotent).
      */
     delete(key: string): Promise<void>;
+
+    /**
+     * Exposes the raw bun:s3 S3File handle for advanced use cases.
+     * Not part of the core StorageClient interface — use with caution.
+     */
+    getFile(key: string): S3File;
 }
 
 // ---------------------------------------------------------------------------
@@ -430,5 +438,6 @@ export function createStorageClient(
         stat,
         exists,
         delete: deleteFn,
+        getFile, // exposed for advanced use cases; not part of the core StorageClient interface
     };
 }

@@ -1,20 +1,19 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
-import { sharedEnv } from "./shared.env";
 
-const DEFAULT_MAX_UPLOAD_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
-
-export const ingestEnv = createEnv({
-    extends: [sharedEnv()],
+export const storageEnv = () => createEnv({
     server: {
         // -----------------------------------------------------------------------------
-        // ingest service
+        // S3 storage
         // -----------------------------------------------------------------------------
-        INGEST_PORT: z.coerce.number().default(3045),
-        INGEST_MAX_UPLOAD_SIZE: z.coerce.number().default(
-            DEFAULT_MAX_UPLOAD_SIZE_BYTES,
-        ),
+        SF_S3_BUCKET: z.string().min(1),
+        SF_S3_REGION: z.string().min(1),
+        SF_S3_ACCESS_KEY_ID: z.string().min(1),
+        SF_S3_SECRET_ACCESS_KEY: z.string().min(1),
+        SF_S3_ENDPOINT: z.url().optional(),
+        SF_S3_OUT_DIR: z.string().default("hsl").optional(),
     },
+
     runtimeEnv: process.env,
 
     // IMPORTANT: ensure only expected vars are exposed

@@ -31,7 +31,8 @@
       "@streamforge/queue": ["../../packages/queue/src/index.ts"],
       "@streamforge/storage": ["../../packages/storage/src/index.ts"],
       "@streamforge/logger": ["../../packages/logger/index.ts"],
-      "@streamforge/env": ["../../packages/env/index.ts"]
+      "@streamforge/env": ["../../packages/env/index.ts"],
+      "@streamforge/utils": ["../../packages/utils/index.ts"]
     },
 
     "skipLibCheck": true,

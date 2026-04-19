@@ -11,14 +11,25 @@
 // whether to retry based on classifyError().
 // ---------------------------------------------------------------------------
 
-import { join } from "node:path";
+import pLimit from "p-limit";
+import { join, sep } from "node:path";
 import { createStorageClient, s3Keys } from "@streamforge/storage";
 import { transcodeEnv } from "@streamforge/env";
-import type { HlsOutput, HlsSegment, TranscodeJob } from "@streamforge/types";
+import type {
+    HlsOutput,
+    HlsSegment,
+    onProgress,
+    TranscodeJob,
+    UploadResult,
+} from "@streamforge/types";
 import {
     buildFfmpegArgs,
-    getHlsOutputPaths,
+    probeResolution,
+    type Rendition,
+    RENDITIONS,
+    runFfmpeg,
     segmentIndexFromFilename,
+    writeMasterPlaylist,
 } from "../utils/hls-args";
 import {
     cleanupJobTmpDir,
@@ -48,27 +59,33 @@ const storage = createStorageClient({
  */
 export async function processHls(
     job: TranscodeJob,
+    onProgress?: onProgress,
 ): Promise<HlsOutput> {
-    const { jobId, s3Key } = job;
+    const { jobId, s3Key, filename, folderName } = job;
     const jobTmpDir = await createJobTmpDir(
-        transcodeEnv.TRANSCODE_TMP_DIR,
-        jobId,
+        {
+            baseTmpDir: transcodeEnv.TRANSCODE_TMP_DIR,
+            jobId,
+            filename: folderName,
+        },
     );
 
     try {
         // -----------------------------------------------------------------------
         // 1. Download raw video from S3
         // -----------------------------------------------------------------------
-        const localInputPath = inputVideoPath(jobTmpDir);
+        const localInputPath = inputVideoPath(jobTmpDir, filename);
 
         logger.info(
             { jobId, s3Key, localInputPath },
             "downloading input from s3",
         );
 
-        await storage.download(s3Key, { destPath: localInputPath });
+        // await storage.download(s3Key, { destPath: localInputPath });
 
         logger.info({ jobId }, "download complete");
+
+        const processedDir = jobTmpDir; // join(jobTmpDir, PROCESSED_BASE_DIR);
 
         // -----------------------------------------------------------------------
         // 2. Invoke ffmpeg
@@ -79,7 +96,13 @@ export async function processHls(
         }, "transcoding started");
 
         const transcodeStart = Date.now();
-        await invokeFfmpeg(localInputPath, jobTmpDir);
+        const manifestPath =
+            "/Users/chithedev/Desktop/lab/zuxlab/streamforge/apps/transcode/tmp/streamforge/019d9ff2-7228-7067-ad6f-38c5ea041b3f/Introduction-to-forex-lesson-1/master.m3u8";
+        //  await invokeFfmpeg(
+        //     localInputPath,
+        //     processedDir,
+        //     onProgress,
+        // );
         const transcodeDurationMs = Date.now() - transcodeStart;
 
         logger.info({ jobId, transcodeDurationMs }, "transcoding complete");
@@ -88,7 +111,8 @@ export async function processHls(
         // 3. Collect output files
         // -----------------------------------------------------------------------
         const segmentFilenames = await listSegmentFiles(jobTmpDir);
-        const { manifestPath } = getHlsOutputPaths(jobTmpDir);
+
+        console.log(segmentFilenames);
 
         if (segmentFilenames.length === 0) {
             throw new FfmpegError(-1, "ffmpeg produced no segment files");
@@ -103,26 +127,61 @@ export async function processHls(
         // 4. Upload segments first — manifest is written last
         // -----------------------------------------------------------------------
         const segments: HlsSegment[] = [];
+        const run = pLimit(transcodeEnv.TRANSCODE_CONCURRENCY);
 
-        for (const filename of segmentFilenames) {
-            const index = segmentIndexFromFilename(filename) ?? segments.length;
-            const destKey = s3Keys.segment(jobId, index);
-            const localPath = join(jobTmpDir, filename);
+        const failed: UploadResult["failed"] = [];
+        let done = 0;
 
-            await storage.uploadFile(destKey, localPath, "video/MP2T");
+        await Promise.allSettled(
+            segmentFilenames.map((rel, index) =>
+                run(async () => {
+                    // Glob already returns forward-slash relative paths; normalise just in case
+                    const normalised = rel.split(sep).join("/");
 
-            segments.push({
-                s3Key: destKey,
-                index,
-                // Segment duration from config — actual duration varies for the last segment
-                duration: transcodeEnv.TRANSCODE_SEGMENT_DURATION,
-            });
-        }
+                    const index = segmentIndexFromFilename(normalised) ??
+                        segments.length;
+
+                    const destKey = s3Keys.segment(
+                        join(folderName, normalised),
+                    );
+
+                    const localPath = join(jobTmpDir, normalised);
+
+                    try {
+                        await storage.uploadFile(
+                            destKey,
+                            localPath,
+                            "video/MP2T",
+                        );
+                        segments.push({
+                            s3Key: destKey,
+                            index,
+                            // Segment duration from config — actual duration varies for the last segment
+                            duration: transcodeEnv.TRANSCODE_SEGMENT_DURATION,
+                        });
+                    } catch (error) {
+                        logger.error(
+                            error,
+                            `Failed to upload ${localPath}`,
+                            "uploadDirectory",
+                        );
+                        failed.push({ localPath, s3Key, error });
+                    }
+
+                    done++;
+                    if (done % 10 === 0 || done === segmentFilenames.length) {
+                        logger.info(
+                            `  Upload ${done}/${segmentFilenames.length} (${failed.length} failed)`,
+                        );
+                    }
+                })
+            ),
+        );
 
         // -----------------------------------------------------------------------
         // 5. Upload manifest — only after all segments are confirmed
         // -----------------------------------------------------------------------
-        const manifestKey = s3Keys.manifest(jobId);
+        const manifestKey = s3Keys.manifest(folderName);
         await storage.uploadFile(
             manifestKey,
             manifestPath,
@@ -144,7 +203,7 @@ export async function processHls(
         };
     } finally {
         // Always clean up temp files — even on error
-        await cleanupJobTmpDir(transcodeEnv.TRANSCODE_TMP_DIR, jobId);
+        // await cleanupJobTmpDir(transcodeEnv.TRANSCODE_TMP_DIR, jobId);
         logger.debug({ jobId }, "temp files cleaned up");
     }
 }
@@ -156,36 +215,72 @@ export async function processHls(
 async function invokeFfmpeg(
     inputPath: string,
     outputDir: string,
-): Promise<void> {
-    const args = buildFfmpegArgs({
-        inputPath,
-        outputDir,
-        segmentDuration: transcodeEnv.TRANSCODE_SEGMENT_DURATION,
-        rendition: "720p",
-    });
+    onProgress?: onProgress,
+): Promise<string> {
+    // ── Determine which renditions to encode ───────────────────────────────────
+    const srcRes = await probeResolution(inputPath);
+    let active: Rendition[] = [...RENDITIONS];
 
-    const proc = Bun.spawn(["ffmpeg", ...args], {
-        stdout: "ignore",
-        stderr: "pipe",
-    });
+    if (srcRes) {
+        logger.info(`Source resolution: ${srcRes.width}×${srcRes.height}`);
+        active = RENDITIONS.filter((r) => r.height <= srcRes.height);
 
-    // Collect stderr for logging and error classification
-    const stderrChunks: Uint8Array[] = [];
-    const reader = proc.stderr.getReader();
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) stderrChunks.push(value);
+        if (active.length === 0) {
+            logger.warn(
+                'Source is smaller than the lowest preset — encoding a single "source" rendition.',
+            );
+            const fallback = RENDITIONS.at(-1);
+            if (fallback) {
+                active = [
+                    {
+                        ...fallback,
+                        name: "source",
+                        width: srcRes.width,
+                        height: srcRes.height,
+                    },
+                ];
+            }
+        } else {
+            logger.info(
+                `Encoding ${active.length} rendition(s): ${
+                    active
+                        .map((r) => r.name)
+                        .join(", ")
+                }`,
+            );
+        }
     }
 
-    const exitCode = await proc.exited;
-    const stderr = Buffer.concat(stderrChunks).toString("utf8");
+    // ── Encode sequentially ────────────────────────────────────────────────────
+    for (let i = 0; i < active.length; i++) {
+        const r = active[i];
+        logger.info(`[${i + 1}/${active.length}] Encoding ${r.name}…`);
 
-    // Always logger exit code and last 10 lines of stderr
-    const stderrTail = stderr.split("\n").slice(-10).join("\n");
-    logger.debug({ exitCode, stderrTail }, "ffmpeg exited");
+        const t0 = Date.now();
+        await runFfmpeg(
+            await buildFfmpegArgs({
+                inputPath,
+                segmentDuration: transcodeEnv.TRANSCODE_SEGMENT_DURATION,
+                outputDir,
+                rendition: r,
+            }),
+        );
+        logger.info(
+            `  ✔ ${r.name} complete in ${
+                ((Date.now() - t0) / 1000).toFixed(1)
+            }s`,
+        );
 
-    if (exitCode !== 0) {
-        throw new FfmpegError(exitCode, stderr);
+        onProgress?.({
+            detail: r.name,
+            stage: i + 1,
+            pct: active.length,
+        });
     }
+
+    // ── Write master playlist ──────────────────────────────────────────────────
+    const masterPlaylistPath = writeMasterPlaylist(outputDir, active);
+    logger.info(`Master playlist → ${masterPlaylistPath}`);
+
+    return masterPlaylistPath;
 }

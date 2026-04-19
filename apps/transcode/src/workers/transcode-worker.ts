@@ -1,169 +1,232 @@
 // ---------------------------------------------------------------------------
 // transcode-worker.ts
 //
-// BullMQ Worker that consumes jobs from the transcode queue.
-// Each job runs processHls() and is marked completed or failed accordingly.
+// BullMQ Worker that processes HLS transcode jobs.
+// Handles:
+//  - Job execution
+//  - Progress updates
+//  - Error classification (retry vs terminal)
+//  - Webhook notifications
 // ---------------------------------------------------------------------------
 
 import { type Job, type RedisClient, Worker } from "bullmq";
+
 import {
     createRedisConnection,
     logConnection,
     QUEUE_NAMES,
 } from "@streamforge/queue";
-import type { FireWebhookPayload, TranscodeJob } from "@streamforge/types";
-import { serveEnv, transcodeEnv } from "@streamforge/env";
+
+import type {
+    FireWebhookPayload,
+    onProgress,
+    TranscodeJob,
+} from "@streamforge/types";
+
+import { transcodeEnv } from "@streamforge/env";
 import { createLogger } from "@streamforge/logger";
+
 import { processHls } from "../processors/hls-processor";
 import { classifyError } from "../utils/error-classifier";
 
+/* =========================================================
+ * Logger
+ * ======================================================= */
 const logger = createLogger("transcode:worker");
 
-let _connection: RedisClient | null = null;
-let _worker: Worker<TranscodeJob> | null = null;
+/* =========================================================
+ * Singleton State
+ * ======================================================= */
+let connection: RedisClient | null = null;
+let worker: Worker<TranscodeJob> | null = null;
 
+/* =========================================================
+ * Redis Connection
+ * ======================================================= */
 export function getRedisConnection(redisUrl: string): RedisClient {
-    if (!_connection) {
-        _connection = createRedisConnection(redisUrl, false);
+    if (!connection) {
+        connection = createRedisConnection(redisUrl, false);
     }
 
-    if (_connection) {
-        _connection.on("connecting", logConnection("Worker").connecting);
-        _connection.on("connect", logConnection("Worker").connect);
-        _connection.on("error", logConnection("Worker").error);
-        _connection.on("close", logConnection("Worker").close);
-        _connection.on("reconnecting", logConnection("Worker").reconnecting);
-    }
+    const log = logConnection("Worker");
 
-    return _connection;
+    connection.on("connecting", log.connecting);
+    connection.on("connect", log.connect);
+    connection.on("error", log.error);
+    connection.on("close", log.close);
+    connection.on("reconnecting", log.reconnecting);
+
+    return connection;
 }
 
-// ── Webhook helper ────────────────────────────────────────────────────────────
-
+/* =========================================================
+ * Webhook Helper
+ * ======================================================= */
 async function fireWebhook(url: string, payload: FireWebhookPayload) {
     if (!url) return;
+
     try {
         await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
-        logger.info(`Webhook delivered to ${url}`);
+
+        logger.info({ url }, "webhook delivered");
     } catch (err) {
         logger.warn(
-            { error: String(err) },
-            `Webhook to ${url} failed: ${(err as Error)?.message}`,
+            {
+                url,
+                error: err instanceof Error ? err.message : String(err),
+            },
+            "webhook failed",
         );
     }
 }
 
+/* =========================================================
+ * Worker Factory
+ * ======================================================= */
 export function createTranscodeWorker(): Worker<TranscodeJob> {
-    if (!_worker) {
-        _worker = new Worker<TranscodeJob>(
+    if (!worker) {
+        worker = new Worker<TranscodeJob>(
             QUEUE_NAMES.transcode,
             async (job: Job<TranscodeJob>) => {
+                const start = Date.now();
+
                 const { jobId, requestId } = job.data;
-                const jobStart = Date.now();
 
-                logger.info({
-                    jobId,
-                    requestId,
-                    attemptsMade: job.attemptsMade,
-                    bullmqJobId: job.id,
-                }, "job picked up");
-
-                try {
-                    const output = await processHls(job.data);
-
-                    logger.info({
+                logger.info(
+                    {
                         jobId,
                         requestId,
-                        manifestKey: output.manifestKey,
-                        segmentCount: output.segments.length,
-                        totalDurationSec: output.totalDuration,
-                        wallClockMs: Date.now() - jobStart,
-                    }, "job completed");
+                        bullmqJobId: job.id,
+                        attempts: job.attemptsMade,
+                    },
+                    "job started",
+                );
 
-                    return output;
+                try {
+                    /* ---------------- Progress callback ---------------- */
+                    const onProgress: onProgress = async (p) => {
+                        await job.updateProgress(p);
+                    };
+
+                    /* ---------------- Core Processing ---------------- */
+                    const result = await processHls(job.data, onProgress);
+
+                    logger.info(
+                        {
+                            jobId,
+                            requestId,
+                            durationMs: Date.now() - start,
+                            segments: result.segments.length,
+                            manifestKey: result.manifestKey,
+                            totalDurationSec: result.totalDuration,
+                            wallClockMs: Date.now() - start,
+                        },
+                        "job completed",
+                    );
+
+                    return result;
                 } catch (err) {
                     const classified = classifyError(err);
 
-                    logger.error({
-                        jobId,
-                        requestId,
-                        errorClass: classified.class,
-                        errorCode: classified.code,
-                        errorMessage: classified.message,
-                        wallClockMs: Date.now() - jobStart,
-                    }, "job failed");
+                    logger.error(
+                        {
+                            jobId,
+                            requestId,
+                            class: classified.class,
+                            code: classified.code,
+                            message: classified.message,
+                            durationMs: Date.now() - start,
+                        },
+                        "job failed",
+                    );
 
+                    /* ---------------- Terminal Failure ---------------- */
                     if (classified.class === "terminal") {
-                        // Throw an UnrecoverableError to tell BullMQ not to retry
-                        // BullMQ checks for this by the error name
-                        const terminal = new Error(classified.message);
-                        terminal.name = "UnrecoverableError";
+                        const error = new Error(classified.message);
+                        error.name = "UnrecoverableError";
 
                         if (transcodeEnv.TRANSCODE_WEBHOOK_URL) {
                             await fireWebhook(
                                 transcodeEnv.TRANSCODE_WEBHOOK_URL,
                                 {
                                     event: "job.failed",
-                                    jobId: job.id || "NO_JOB_ID",
-                                    error: (err as Error)?.message ||
-                                        "Job failed",
+                                    jobId: job.id ?? jobId,
+                                    error: classified.message,
                                     data: null,
+                                    status: "failed",
                                 },
                             );
                         }
-                        throw terminal;
+
+                        throw error;
                     }
 
-                    // Retriable — re-throw so BullMQ applies the backoff policy
+                    /* ---------------- Retryable Failure ---------------- */
                     throw err;
                 }
             },
             {
-                connection: getRedisConnection(serveEnv.SF_REDIS_URL),
+                connection: getRedisConnection(transcodeEnv.SF_REDIS_URL),
                 concurrency: transcodeEnv.TRANSCODE_CONCURRENCY,
-                // Lock duration must be longer than the maximum expected transcode time
-                lockDuration: 5 * 60 * 1000, // 5 minutes
-                // Renew lock automatically for long-running jobs
-                lockRenewTime: 60 * 1000, // every 60 seconds
+
+                // Long-running job safety
+                lockDuration: 5 * 60 * 1000,
+                lockRenewTime: 60 * 1000,
             },
         );
     }
 
-    _worker.on("error", (err) => {
+    /* =========================================================
+   * Worker Events
+   * ======================================================= */
+
+    worker.on("error", (err) => {
         logger.error({ error: String(err) }, "worker error");
     });
 
-    _worker.on("stalled", (jobId) => {
-        logger.warn({ bullmqJobId: jobId }, "job stalled");
+    worker.on("stalled", (jobId) => {
+        logger.warn({ jobId }, "job stalled");
     });
 
-    _worker.on("completed", (job, result) => {
-        logger.info({
-            masterPlaylist: result.masterPlaylist,
-        }, `Job ${job.id} completed`);
-    });
-
-    _worker.on("failed", (job, err) => {
-        logger.error(
-            { error: String(err) },
-            `Job ${job?.id} failed (attempt ${job?.attemptsMade}): ${err.message}`,
+    worker.on("completed", (job, result) => {
+        logger.info(
+            {
+                jobId: job.id,
+                manifest: result.manifestKey,
+            },
+            "job completed event",
         );
     });
 
-    return _worker;
+    worker.on("failed", (job, err) => {
+        logger.error(
+            {
+                jobId: job?.id,
+                attempts: job?.attemptsMade,
+                error: err.message,
+            },
+            "job failed event",
+        );
+    });
+
+    return worker;
 }
 
+/* =========================================================
+ * Shutdown
+ * ======================================================= */
 export async function closeTranscodeWorker(): Promise<void> {
-    if (_worker) {
-        await _worker.close();
-        _worker = null;
+    if (worker) {
+        await worker.close();
+        worker = null;
     }
-    if (_connection) {
-        await _connection.quit();
-        _connection = null;
+
+    if (connection) {
+        await connection.quit();
+        connection = null;
     }
 }

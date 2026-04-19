@@ -16,6 +16,7 @@
     "@streamforge/env": "workspace:*",
     "@streamforge/storage": "workspace:*",
     "@streamforge/types": "workspace:*",
+    "@streamforge/logger": "workspace:*",
     "hono": "^4.3.11"
   },
   "devDependencies": {

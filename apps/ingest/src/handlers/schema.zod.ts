@@ -22,17 +22,7 @@ const webhookUrlSchema = z
  * ======================================================= */
 export const uploadPayloadSchema = z.object({
     videoUrl: videoUrlSchema,
-
     generateThumbnail: z.coerce.boolean().default(false),
-
-    thumbCount: z
-        .coerce
-        .number()
-        .int()
-        .min(1)
-        .max(10)
-        .default(1),
-
     webhookUrl: webhookUrlSchema,
 });
 

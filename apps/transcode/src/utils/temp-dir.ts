@@ -1,61 +1,106 @@
 // ---------------------------------------------------------------------------
 // temp-dir.ts
 //
-// Manages per-job temporary working directories for ffmpeg input/output.
-// Each job gets its own isolated directory so concurrent jobs never collide.
+// Manages per-job temporary working directories for ffmpeg pipelines.
+// Each job gets isolated storage to prevent concurrency collisions.
 // ---------------------------------------------------------------------------
 
-import { mkdir, rm, readdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
+
+/* =========================================================
+ * Types
+ * ======================================================= */
+interface CreateJobTmpDir {
+  baseTmpDir: string;
+  jobId: string;
+  filename: string;
+}
+
+/* =========================================================
+ * Directory Creation
+ * ======================================================= */
 
 /**
  * Creates a dedicated temp directory for a job.
- * Returns the absolute path.
  *
  * Structure:
  *   <baseTmpDir>/
  *   └── <jobId>/
- *       ├── original.mp4      ← downloaded from S3
- *       ├── index.m3u8        ← ffmpeg output
- *       ├── seg-000.ts
- *       └── seg-001.ts …
+ *       └── <filename>/
+ *           ├── <filename>.mp4      ← downloaded from S3
+ *           ├── master.m3u8        ← ffmpeg output
+ *           └── 1080p/
+ *               └── seg-000.ts
  */
-export async function createJobTmpDir(baseTmpDir: string, jobId: string): Promise<string> {
-  const dir = join(baseTmpDir, jobId);
+export async function createJobTmpDir({
+  baseTmpDir,
+  jobId,
+  filename,
+}: CreateJobTmpDir): Promise<string> {
+  const dir = join(baseTmpDir, jobId, filename);
   await mkdir(dir, { recursive: true });
   return dir;
 }
 
+/* =========================================================
+ * Cleanup
+ * ======================================================= */
+
 /**
- * Removes the job's temp directory and all its contents.
- * Always runs — safe to call after both success and failure.
- *
- * Swallows errors so a cleanup failure never masks the original job outcome.
+ * Removes a job's temp directory safely.
+ * Never throws — cleanup failure is non-fatal.
  */
-export async function cleanupJobTmpDir(baseTmpDir: string, jobId: string): Promise<void> {
+export async function cleanupJobTmpDir(
+  baseTmpDir: string,
+  jobId: string,
+): Promise<void> {
   const dir = join(baseTmpDir, jobId);
+
   try {
     await rm(dir, { recursive: true, force: true });
   } catch {
-    // Intentionally swallowed — cleanup failure is non-fatal
+    // intentionally ignored
   }
 }
 
-/**
- * Returns all .ts segment filenames in the job's temp directory, sorted
- * by segment index so they are uploaded in order.
- */
-export async function listSegmentFiles(jobTmpDir: string): Promise<string[]> {
-  const entries = await readdir(jobTmpDir);
-  return entries
-    .filter((f) => f.endsWith(".ts"))
-    .sort(); // seg-000.ts, seg-001.ts … lexicographic sort is sufficient
-}
+/* =========================================================
+ * Segment Listing
+ * =========================================================
+ * */
 
 /**
- * Returns the absolute path for the downloaded input video within a job dir.
+ * Returns all `.ts` segment files in a job directory,
+ * sorted numerically (seg-1 < seg-10 correct ordering).
  */
-export function inputVideoPath(jobTmpDir: string): string {
-  return join(jobTmpDir, "original.mp4");
+export async function listSegmentFiles(
+  jobTmpDir: string,
+): Promise<string[]> {
+  const glob = new Bun.Glob("**/*.{ts,m3u8}");
+
+  const files = await Array.fromAsync(
+    glob.scan({ cwd: jobTmpDir, onlyFiles: true }),
+  );
+
+  const filteredFiles = files.filter((f) =>
+    f.endsWith(".ts") || f.endsWith("index.m3u8")
+  );
+
+  return filteredFiles.sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true })
+  );
+}
+
+/* =========================================================
+ * Path Helpers
+ * ======================================================= */
+
+/**
+ * Returns the absolute path for the downloaded input video.
+ */
+export function inputVideoPath(
+  jobTmpDir: string,
+  filename: string,
+): string {
+  return join(jobTmpDir, filename);
 }

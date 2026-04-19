@@ -6,6 +6,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
 import { poweredBy } from "hono/powered-by";
 import { secureHeaders } from "hono/secure-headers";
+import { csrf } from "hono/csrf";
 
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv } from "@streamforge/env";
@@ -38,6 +39,7 @@ const origin = ingestEnv.SF_COR_ORIGIN === "*"
  * ======================================================= */
 app.use(honoLogger());
 app.use(trimTrailingSlash());
+app.use(csrf({ origin }));
 
 app.use(
   "*",
@@ -65,6 +67,7 @@ app.use("*", async (c, next) => {
       path: c.req.path,
       status: c.res.status,
       durationMs: Date.now() - start,
+      contentLength: c.res.headers.get("content-length") ?? undefined,
     },
     "request",
   );

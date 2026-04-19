@@ -53,7 +53,9 @@ enqueueRoute.post(
         webhookUrl,
       } = payload;
 
-      const { filePath, filename } = resolveFile(videoUrl);
+      const { filePath, sanitizedFilename, filenameWithoutExt } = resolveFile(
+        videoUrl,
+      );
 
       logger.info(
         {
@@ -70,7 +72,8 @@ enqueueRoute.post(
       await enqueueTranscodeJob(queue, {
         jobId,
         requestId,
-        originalFilename: filename,
+        filename: sanitizedFilename,
+        folderName: filenameWithoutExt,
         s3Key: filePath,
         uploadedAt: new Date().toISOString(),
         generateThumbnail,

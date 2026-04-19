@@ -69,7 +69,7 @@ export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
 
 export const JOB_OPTIONS = {
     transcode: {
-        attempts: 3,
+        attempts: 5,
         backoff: {
             type: "exponential" as const,
             delay: 5_000,
@@ -80,7 +80,7 @@ export const JOB_OPTIONS = {
         },
         removeOnFail: {
             // 0 means retain all — failed jobs must never be auto-deleted
-            count: 0,
+            count: 10,
         },
     },
 } as const;
@@ -125,12 +125,6 @@ export function createRedisConnection(
         logger.debug({ redisUrl }, "Created Redis connection");
     }
 
-    connection.on("connecting", logConnection("Queue").connecting);
-    connection.on("connect", logConnection("Queue").connect);
-    connection.on("error", logConnection("Queue").error);
-    connection.on("close", logConnection("Queue").close);
-    connection.on("reconnecting", logConnection("Queue").reconnecting);
-
     return connection;
 }
 
@@ -154,12 +148,10 @@ export function createTranscodeQueue(
         defaultJobOptions: JOB_OPTIONS.transcode,
     });
 
-    if (sharedEnv.SF_VERBOSE) {
-        logger.debug({
-            name: QUEUE_NAMES.transcode,
-            config: JOB_OPTIONS.transcode,
-        }, "Created Bullmq Queue");
-    }
+    logger.debug({
+        name: QUEUE_NAMES.transcode,
+        config: JOB_OPTIONS.transcode,
+    }, "Created Bullmq Queue");
 
     return queue;
 }
@@ -222,7 +214,7 @@ export async function enqueueTranscodeJob(
 
     logger.info({
         payloajobId: job.id,
-        filename: payload.originalFilename,
+        filename: payload.filename,
         queueName: QUEUE_NAMES.transcode,
         deduplicated,
     }, "Job enqueued");
