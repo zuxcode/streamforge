@@ -27,9 +27,6 @@ export interface TranscodeJob {
 
   generateThumbnail: boolean;
 
-  /** Number of thumbnails to generate (e.g. evenly spaced across timeline). */
-  thumbCount: number;
-
   /** Webhook URL to notify when job events finish. */
   webhookUrl?: string | undefined;
 

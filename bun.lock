@@ -22,6 +22,7 @@
         "@streamforge/queue": "workspace:*",
         "@streamforge/storage": "workspace:*",
         "@streamforge/types": "workspace:*",
+        "@streamforge/utils": "workspace:*",
         "bullmq": "^5.7.1",
         "hono": "^4.12.9",
         "ioredis": "^5.4.1",
@@ -123,6 +124,13 @@
         "typescript": "^5.4.5",
       },
     },
+    "packages/utils": {
+      "name": "@streamforge/utils",
+      "version": "0.0.1",
+      "devDependencies": {
+        "typescript": "^5.4.5",
+      },
+    },
   },
   "packages": {
     "@bull-board/api": ["@bull-board/api@6.21.0", "", { "dependencies": { "redis-info": "^3.1.0" }, "peerDependencies": { "@bull-board/ui": "6.21.0" } }, "sha512-5bX3U8baU4OulDLeXwqWI6/FZolpi1APfoJVXndR4fKdmuYr9cdbH8cg7juublfzX01T+3zoiZkveX7iD5y8gA=="],
@@ -166,6 +174,8 @@
     "@streamforge/transcode": ["@streamforge/transcode@workspace:apps/transcode"],
 
     "@streamforge/types": ["@streamforge/types@workspace:packages/types"],
+
+    "@streamforge/utils": ["@streamforge/utils@workspace:packages/utils"],
 
     "@t3-oss/env-core": ["@t3-oss/env-core@0.13.11", "", { "peerDependencies": { "arktype": "^2.1.0", "typescript": ">=5.0.0", "valibot": "^1.0.0-beta.7 || ^1.0.0", "zod": "^3.24.0 || ^4.0.0" }, "optionalPeers": ["arktype", "typescript", "valibot", "zod"] }, "sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ=="],
 
@@ -316,6 +326,8 @@
     "@streamforge/transcode/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@streamforge/types/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@streamforge/utils/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "bullmq/uuid": ["uuid@11.1.0", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A=="],
 

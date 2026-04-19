@@ -6,7 +6,6 @@ import { Hono } from "hono";
 import { v7 as uuidV7 } from "uuid";
 import { zValidator } from "@hono/zod-validator";
 
-import { resolveFile } from "@streamforge/utils";
 import { enqueueTranscodeJob, getQueueDepth } from "@streamforge/queue";
 
 import type { ErrorResponse, UploadAcceptedResponse } from "@streamforge/types";
@@ -15,6 +14,7 @@ import { ingestEnv } from "@streamforge/env";
 import { getTranscodeQueue } from "../queues/queue-client";
 import { uploadPayloadSchema } from "../handlers/schema.zod";
 import { createLogger } from "@streamforge/logger";
+import { resolveFile } from "@streamforge/utils";
 
 /* =========================================================
  * App + Logger
@@ -49,7 +49,6 @@ enqueueRoute.post(
       const {
         videoUrl,
         generateThumbnail,
-        thumbCount,
         webhookUrl,
       } = payload;
 
@@ -77,7 +76,6 @@ enqueueRoute.post(
         s3Key: filePath,
         uploadedAt: new Date().toISOString(),
         generateThumbnail,
-        thumbCount,
         webhookUrl,
       });
 
