@@ -174,8 +174,6 @@ export async function verifyJwt(
 ): Promise<AuthenticatedUser> {
     let decoded: Record<string, unknown>;
 
-    console.log(config);
-
     try {
         decoded = await verify(token, config.publicKey, "HS256") as Record<
             string,

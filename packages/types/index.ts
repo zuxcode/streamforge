@@ -13,14 +13,14 @@ export interface TranscodeJob {
   /** Unique identifier for this job, used as the S3 key prefix. */
   jobId: string;
 
-  /** S3 key where the raw uploaded video is stored. */
-  s3Key: string;
+  /** S3 path where the raw uploaded video is stored. */
+  prefix: string;
 
-  /** Filename to use in saving file. */
+  /** S3 bucket name where the raw uploaded video is stored. */
+  bucketName: string;
+
+  /** raw Filename */
   filename: string;
-
-  /** folder name that file will be saved to. */
-  folderName: string;
 
   /** ISO 8601 timestamp of when the upload was received. */
   uploadedAt: string;
@@ -117,18 +117,20 @@ export interface UploadResult {
   failed: Array<{ localPath: string; s3Key: string; error: unknown }>;
 }
 
-
-
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
- 
+
 /** Subscription tiers a user can hold. */
-export type SubscriptionStatus = "active" | "inactive" | "trialing" | "past_due";
- 
+export type SubscriptionStatus =
+  | "active"
+  | "inactive"
+  | "trialing"
+  | "past_due";
+
 /** Roles that can be assigned to a user. */
 export type UserRole = "admin" | "user";
- 
+
 /**
  * The verified user profile returned by the auth service's token introspection
  * endpoint. Produced by @streamforge/auth and consumed by service middleware.
@@ -139,13 +141,13 @@ export type UserRole = "admin" | "user";
 export interface AuthenticatedUser {
   /** The user's unique ID as assigned by the auth provider. */
   id: string;
- 
+
   /** Human-readable identifier (email or username). */
   email: string;
- 
+
   /** The user's assigned role. */
   role: UserRole;
- 
+
   /** Current subscription status. */
   subscription: SubscriptionStatus;
 }

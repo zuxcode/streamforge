@@ -14,7 +14,6 @@ import { ingestEnv } from "@streamforge/env";
 import { getTranscodeQueue } from "../queues/queue-client";
 import { uploadPayloadSchema } from "../handlers/schema.zod";
 import { createLogger } from "@streamforge/logger";
-import { resolveFile } from "@streamforge/utils";
 import { createAuthMiddleware } from "@streamforge/auth";
 
 /* =========================================================
@@ -64,18 +63,19 @@ enqueueRoute.post(
         mediaId,
         generateThumbnail,
         webhookUrl,
-        filepath,
+        prefix,
+        bucketName,
+        filename,
       } = payload;
 
-      const { filePath, sanitizedFilename, filenameWithoutExt } = resolveFile(
-        filepath,
-      );
+      logger.debug(payload);
 
       logger.info(
         {
           requestId,
           jobId,
           mediaId,
+          filename,
         },
         "enqueue received",
       );
@@ -86,9 +86,9 @@ enqueueRoute.post(
       await enqueueTranscodeJob(queue, {
         jobId,
         requestId,
-        filename: sanitizedFilename,
-        folderName: filenameWithoutExt,
-        s3Key: filePath,
+        filename,
+        prefix,
+        bucketName,
         uploadedAt: new Date().toISOString(),
         generateThumbnail,
         webhookUrl,

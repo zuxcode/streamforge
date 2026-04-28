@@ -19,11 +19,6 @@ export const sharedEnv = () =>
                 "info",
             ),
             SF_COR_ORIGIN: z.string().default("*"),
-
-            /**
-             * @deprecated
-             */
-            SF_VERBOSE: z.coerce.boolean().default(false),
         },
 
         runtimeEnv: process.env,

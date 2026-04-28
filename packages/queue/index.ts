@@ -16,7 +16,6 @@
 // ---------------------------------------------------------------------------
 
 import type { TranscodeJob } from "@streamforge/types";
-import { sharedEnv } from "@streamforge/env";
 import { createLogger } from "@streamforge/logger";
 import { Queue } from "bullmq";
 import IORedis, { type Cluster, type Redis } from "ioredis";
@@ -121,9 +120,7 @@ export function createRedisConnection(
         tls: url.protocol === "rediss:" ? {} : undefined,
     });
 
-    if (sharedEnv.SF_VERBOSE) {
-        logger.debug({ redisUrl }, "Created Redis connection");
-    }
+    logger.debug({ redisUrl }, "Created Redis connection");
 
     return connection;
 }
@@ -242,11 +239,9 @@ export async function getQueueDepth(
         return (counts.waiting ?? 0) + (counts.active ?? 0) +
             (counts.delayed ?? 0);
     } catch (error) {
-        if (sharedEnv.SF_VERBOSE) {
-            logger.error({
-                error,
-            }, "Failed to get queue depth");
-        }
+        logger.error({
+            error,
+        }, "Failed to get queue depth");
         // Swallow — depth is observability-only, never load-bearing
         return -1;
     }
