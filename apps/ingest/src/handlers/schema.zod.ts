@@ -5,7 +5,7 @@ import { z } from "zod";
  * ======================================================= */
 
 // Accept either a valid URL or a non-empty string (e.g., S3 key)
-const videoUrlSchema = z.union([
+const filepathSchema = z.union([
     z.url(),
     z.string().min(1),
 ]);
@@ -21,11 +21,11 @@ const webhookUrlSchema = z
  * Upload Payload Schema
  * ======================================================= */
 export const uploadPayloadSchema = z.object({
-    videoUrl: videoUrlSchema,
     generateThumbnail: z.coerce.boolean().default(false),
     webhookUrl: webhookUrlSchema,
+    filepath: filepathSchema,
+    mediaId: z.union([z.string().min(1), z.coerce.number()]),
 });
-
 /* =========================================================
  * Types
  * ======================================================= */

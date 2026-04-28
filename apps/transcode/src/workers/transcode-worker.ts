@@ -23,11 +23,13 @@ import type {
     TranscodeJob,
 } from "@streamforge/types";
 
-import { transcodeEnv } from "@streamforge/env";
+import { transcodeEnv as env } from "@streamforge/env";
 import { createLogger } from "@streamforge/logger";
 
 import { processHls } from "../processors/hls-processor";
 import { classifyError } from "../utils/error-classifier";
+
+const transcodeEnv = env();
 
 /* =========================================================
  * Logger
@@ -150,7 +152,7 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
                         error.name = "UnrecoverableError";
 
                         if (transcodeEnv.TRANSCODE_WEBHOOK_URL) {
-                            await fireWebhook(
+                            fireWebhook(
                                 transcodeEnv.TRANSCODE_WEBHOOK_URL,
                                 {
                                     event: "job.failed",
@@ -200,6 +202,21 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
             },
             "job completed event",
         );
+        if (transcodeEnv.TRANSCODE_WEBHOOK_URL) {
+            fireWebhook(
+                transcodeEnv.TRANSCODE_WEBHOOK_URL,
+                {
+                    event: "job.complete",
+                    jobId: job.id as string,
+                    error: null,
+                    data: {
+                        durationMs: result.totalDuration,
+                        filename: result.filename,
+                    },
+                    status: "completed",
+                },
+            );
+        }
     });
 
     worker.on("failed", (job, err) => {

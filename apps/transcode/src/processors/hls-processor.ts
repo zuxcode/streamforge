@@ -14,7 +14,7 @@
 import pLimit from "p-limit";
 import { join, sep } from "node:path";
 import { createStorageClient, s3Keys } from "@streamforge/storage";
-import { transcodeEnv } from "@streamforge/env";
+import { transcodeEnv as env } from "@streamforge/env";
 import type {
     HlsOutput,
     HlsSegment,
@@ -39,8 +39,11 @@ import {
 } from "../utils/temp-dir";
 import { FfmpegError } from "../utils/error-classifier";
 import { createLogger } from "@streamforge/logger";
+import { generateThumbnails } from "./thumbnail";
 
 const logger = createLogger("transcode:worker:processor");
+
+const transcodeEnv = env();
 
 const storage = createStorageClient({
     bucket: transcodeEnv.SF_S3_BUCKET,
@@ -61,7 +64,14 @@ export async function processHls(
     job: TranscodeJob,
     onProgress?: onProgress,
 ): Promise<HlsOutput> {
-    const { jobId, s3Key, filename, folderName } = job;
+    const {
+        jobId,
+        s3Key,
+        filename,
+        folderName,
+        generateThumbnail,
+    } = job;
+
     const jobTmpDir = await createJobTmpDir(
         {
             baseTmpDir: transcodeEnv.TRANSCODE_TMP_DIR,
@@ -81,11 +91,9 @@ export async function processHls(
             "downloading input from s3",
         );
 
-        // await storage.download(s3Key, { destPath: localInputPath });
+        await storage.download(s3Key, { destPath: localInputPath });
 
         logger.info({ jobId }, "download complete");
-
-        const processedDir = jobTmpDir; // join(jobTmpDir, PROCESSED_BASE_DIR);
 
         // -----------------------------------------------------------------------
         // 2. Invoke ffmpeg
@@ -96,13 +104,11 @@ export async function processHls(
         }, "transcoding started");
 
         const transcodeStart = Date.now();
-        const manifestPath =
-            "/Users/chithedev/Desktop/lab/zuxlab/streamforge/apps/transcode/tmp/streamforge/019d9ff2-7228-7067-ad6f-38c5ea041b3f/Introduction-to-forex-lesson-1/master.m3u8";
-        //  await invokeFfmpeg(
-        //     localInputPath,
-        //     processedDir,
-        //     onProgress,
-        // );
+        const manifestPath = await invokeFfmpeg(
+            localInputPath,
+            jobTmpDir,
+            onProgress,
+        );
         const transcodeDurationMs = Date.now() - transcodeStart;
 
         logger.info({ jobId, transcodeDurationMs }, "transcoding complete");
@@ -111,8 +117,6 @@ export async function processHls(
         // 3. Collect output files
         // -----------------------------------------------------------------------
         const segmentFilenames = await listSegmentFiles(jobTmpDir);
-
-        console.log(segmentFilenames);
 
         if (segmentFilenames.length === 0) {
             throw new FfmpegError(-1, "ffmpeg produced no segment files");
@@ -133,7 +137,7 @@ export async function processHls(
         let done = 0;
 
         await Promise.allSettled(
-            segmentFilenames.map((rel, index) =>
+            segmentFilenames.map((rel) =>
                 run(async () => {
                     // Glob already returns forward-slash relative paths; normalise just in case
                     const normalised = rel.split(sep).join("/");
@@ -148,11 +152,11 @@ export async function processHls(
                     const localPath = join(jobTmpDir, normalised);
 
                     try {
-                        await storage.uploadFile(
-                            destKey,
-                            localPath,
-                            "video/MP2T",
-                        );
+                        // await storage.uploadFile(
+                        //     destKey,
+                        //     localPath,
+                        //     "video/MP2T",
+                        // );
                         segments.push({
                             s3Key: destKey,
                             index,
@@ -182,11 +186,30 @@ export async function processHls(
         // 5. Upload manifest — only after all segments are confirmed
         // -----------------------------------------------------------------------
         const manifestKey = s3Keys.manifest(folderName);
-        await storage.uploadFile(
-            manifestKey,
-            manifestPath,
-            "application/vnd.apple.mpegurl",
-        );
+        // await storage.uploadFile(
+        //     manifestKey,
+        //     manifestPath,
+        //     "application/vnd.apple.mpegurl",
+        // );
+
+        // -----------------------------------------------------------------------
+        // 6. Thumbnails (optional)
+        // -----------------------------------------------------------------------
+        if (generateThumbnail) {
+            logger.info("Stage 2b: Generating thumbnails…");
+            const [thumbnailLocalPaths] = await generateThumbnails({
+                inputPath: localInputPath,
+                outputDir: jobTmpDir,
+                count: 1,
+            });
+
+            const thumbnailKey = s3Keys.thumbnail(folderName);
+            // await storage.uploadFile(
+            //     thumbnailKey,
+            //     thumbnailLocalPaths,
+            //     "image/jpeg",
+            // );
+        }
 
         logger.info({
             jobId,
@@ -199,6 +222,7 @@ export async function processHls(
             segments,
             totalDuration: segments.length *
                 transcodeEnv.TRANSCODE_SEGMENT_DURATION,
+            filename: folderName,
             rendition: "720p",
         };
     } finally {

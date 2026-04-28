@@ -11,7 +11,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@streamforge/types": "workspace:*"
+    "@streamforge/types": "workspace:*",
+    "@streamforge/env": "workspace:*",
+    "hono": "4.12.14"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

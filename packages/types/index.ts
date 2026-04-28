@@ -64,6 +64,7 @@ export interface HlsOutput {
 
   /** Output resolution label, e.g. "720p". */
   rendition: string;
+  filename: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,8 +101,7 @@ export interface FireWebhookPayload {
   jobId: string;
   error: string | null;
   data: {
-    masterPlaylist: string;
-    thumbnails: string[];
+    filename: string;
     durationMs: number;
   } | null;
 }
@@ -115,4 +115,37 @@ export type onProgress = (progress: {
 export interface UploadResult {
   uploaded: string[];
   failed: Array<{ localPath: string; s3Key: string; error: unknown }>;
+}
+
+
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+ 
+/** Subscription tiers a user can hold. */
+export type SubscriptionStatus = "active" | "inactive" | "trialing" | "past_due";
+ 
+/** Roles that can be assigned to a user. */
+export type UserRole = "admin" | "user";
+ 
+/**
+ * The verified user profile returned by the auth service's token introspection
+ * endpoint. Produced by @streamforge/auth and consumed by service middleware.
+ *
+ * This is not a JWT payload — it is the normalised response from calling the
+ * external auth provider (Auth0, Clerk, etc.) with an opaque access token.
+ */
+export interface AuthenticatedUser {
+  /** The user's unique ID as assigned by the auth provider. */
+  id: string;
+ 
+  /** Human-readable identifier (email or username). */
+  email: string;
+ 
+  /** The user's assigned role. */
+  role: UserRole;
+ 
+  /** Current subscription status. */
+  subscription: SubscriptionStatus;
 }

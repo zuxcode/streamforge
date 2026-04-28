@@ -87,8 +87,14 @@ export const s3Keys = {
      * e.g. processed/abc-123/index.m3u8
      */
     manifest: (filename: string): string =>
-        // join("hsl", filename, "master.m3u8"),
         join("processed", filename, "master.m3u8"),
+
+    /**
+     * Key for the HLS manifest.
+     * e.g. processed/abc-123/thumbnail.jpg
+     */
+    thumbnail: (filename: string): string =>
+        join("processed", filename, "thumbnail.jpg"),
 
     /**
      * Key for a single HLS segment.

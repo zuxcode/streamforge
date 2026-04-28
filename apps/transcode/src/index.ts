@@ -12,6 +12,9 @@ import {
   createTranscodeWorker,
 } from "./workers/transcode-worker";
 
+const env = transcodeEnv()
+
+
 /* =========================================================
  * Logger
  * ======================================================= */
@@ -22,17 +25,17 @@ const log = createLogger("transcode:main");
  * ======================================================= */
 async function bootstrap() {
   // Ensure tmp directory exists before processing jobs
-  await mkdir(transcodeEnv.TRANSCODE_TMP_DIR, { recursive: true });
+  await mkdir(env.TRANSCODE_TMP_DIR, { recursive: true });
 
   // Start worker
   createTranscodeWorker();
 
   log.info(
     {
-      concurrency: transcodeEnv.TRANSCODE_CONCURRENCY,
-      tmpDir: transcodeEnv.TRANSCODE_TMP_DIR,
-      segmentDuration: transcodeEnv.TRANSCODE_SEGMENT_DURATION,
-      nodeEnv: transcodeEnv.NODE_ENV,
+      concurrency: env.TRANSCODE_CONCURRENCY,
+      tmpDir: env.TRANSCODE_TMP_DIR,
+      segmentDuration: env.TRANSCODE_SEGMENT_DURATION,
+      nodeEnv: env.NODE_ENV,
     },
     "transcode worker started",
   );

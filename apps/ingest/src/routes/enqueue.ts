@@ -15,6 +15,7 @@ import { getTranscodeQueue } from "../queues/queue-client";
 import { uploadPayloadSchema } from "../handlers/schema.zod";
 import { createLogger } from "@streamforge/logger";
 import { resolveFile } from "@streamforge/utils";
+import { createAuthMiddleware } from "@streamforge/auth";
 
 /* =========================================================
  * App + Logger
@@ -26,6 +27,19 @@ const logger = createLogger("ingest:enqueue-route");
  * Constants
  * ======================================================= */
 const ROUTE_PATH = "/enqueue";
+
+// ---------------------------------------------------------------------------
+// Auth middleware
+//
+// Created once at startup. The introspection cache is shared across all
+// requests for the lifetime of this process.
+// ---------------------------------------------------------------------------
+
+const authMiddleware = createAuthMiddleware({
+  publicKey: ingestEnv.AUTH_PUBLIC_KEY,
+});
+
+enqueueRoute.use(ROUTE_PATH, authMiddleware);
 
 /* =========================================================
  * Route: POST /enqueue
@@ -47,20 +61,21 @@ enqueueRoute.post(
        * Extract + Resolve Input
        * --------------------------------------------------- */
       const {
-        videoUrl,
+        mediaId,
         generateThumbnail,
         webhookUrl,
+        filepath,
       } = payload;
 
       const { filePath, sanitizedFilename, filenameWithoutExt } = resolveFile(
-        videoUrl,
+        filepath,
       );
 
       logger.info(
         {
           requestId,
           jobId,
-          videoUrl,
+          mediaId,
         },
         "enqueue received",
       );
