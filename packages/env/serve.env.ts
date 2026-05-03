@@ -8,7 +8,7 @@ const CACHE_TTL = 60 * 60 * 24;
 
 export const serveEnv = () =>
     createEnv({
-        extends: [sharedEnv(), storageEnv(), authEnv],
+        extends: [sharedEnv(), storageEnv(), authEnv()],
         server: {
             // -----------------------------------------------------------------------------
             // serve service

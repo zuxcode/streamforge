@@ -20,7 +20,6 @@ export const uploadPayloadSchema = z.object({
     prefix: z.string().min(1),
     mediaId: z.union([z.string().min(1), z.coerce.number()]),
     filename: z.string().min(1),
-    bucketName: z.string().min(1),
 });
 /* =========================================================
  * Types

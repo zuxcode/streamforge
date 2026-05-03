@@ -9,12 +9,14 @@ import { secureHeaders } from "hono/secure-headers";
 import { csrf } from "hono/csrf";
 
 import { createLogger } from "@streamforge/logger";
-import { ingestEnv } from "@streamforge/env";
+import { ingestEnv as env } from "@streamforge/env";
 
 import { closeTranscodeQueue, getTranscodeQueue } from "./queues/queue-client";
 
 import { enqueueRoute } from "./routes/enqueue";
 import { queueRoute } from "./handlers/queue-ui";
+
+const ingestEnv = env()
 
 /* =========================================================
  * Bootstrap (external services)

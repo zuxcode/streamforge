@@ -15,6 +15,8 @@ export const transcodeEnv = () =>
             TRANSCODE_SEGMENT_DURATION: z.coerce.number().default(6),
             TRANSCODE_WEBHOOK_URL: z.url().optional(),
             OUTPUT_DIR: z.string().default("processed"),
+            STREAM_URL: z.url(),
+            PUBLIC_KEY: z.string().min(1),
         },
 
         runtimeEnv: process.env,

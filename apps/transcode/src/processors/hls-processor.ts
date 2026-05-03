@@ -39,6 +39,7 @@ import {
 } from "../utils/temp-dir";
 import { FfmpegError } from "../utils/error-classifier";
 import { createLogger } from "@streamforge/logger";
+import { getFolderName, sanitizeFile } from "@streamforge/utils";
 import { generateThumbnails } from "./thumbnail";
 
 const logger = createLogger("transcode:worker:processor");
@@ -66,11 +67,15 @@ export async function processHls(
 ): Promise<HlsOutput> {
     const {
         jobId,
-        s3Key,
-        filename,
-        folderName,
         generateThumbnail,
+        prefix,
+        filename,
+        mediaId,
     } = job;
+
+    const sanitizedFile = sanitizeFile(job.filename);
+    const folderName = sanitizeFile(getFolderName(sanitizedFile));
+    const s3Key = join(prefix, filename);
 
     const jobTmpDir = await createJobTmpDir(
         {
@@ -91,6 +96,12 @@ export async function processHls(
             "downloading input from s3",
         );
 
+        onProgress?.({
+            stage: 1,
+            pct: 0,
+            detail: "downloading video",
+        });
+
         await storage.download(s3Key, { destPath: localInputPath });
 
         logger.info({ jobId }, "download complete");
@@ -104,6 +115,12 @@ export async function processHls(
         }, "transcoding started");
 
         const transcodeStart = Date.now();
+
+        onProgress?.({
+            stage: 2,
+            pct: 0,
+            detail: "transcoding video",
+        });
         const manifestPath = await invokeFfmpeg(
             localInputPath,
             jobTmpDir,
@@ -136,6 +153,12 @@ export async function processHls(
         const failed: UploadResult["failed"] = [];
         let done = 0;
 
+        onProgress?.({
+            stage: 3,
+            pct: 0,
+            detail: "uploading segments",
+        });
+
         await Promise.allSettled(
             segmentFilenames.map((rel) =>
                 run(async () => {
@@ -152,11 +175,11 @@ export async function processHls(
                     const localPath = join(jobTmpDir, normalised);
 
                     try {
-                        // await storage.uploadFile(
-                        //     destKey,
-                        //     localPath,
-                        //     "video/MP2T",
-                        // );
+                        await storage.uploadFile(
+                            destKey,
+                            localPath,
+                            "video/MP2T",
+                        );
                         segments.push({
                             s3Key: destKey,
                             index,
@@ -185,30 +208,48 @@ export async function processHls(
         // -----------------------------------------------------------------------
         // 5. Upload manifest — only after all segments are confirmed
         // -----------------------------------------------------------------------
+        onProgress?.({
+            stage: 4,
+            pct: 0,
+            detail: "uploading master playlist",
+        });
+
         const manifestKey = s3Keys.manifest(folderName);
-        // await storage.uploadFile(
-        //     manifestKey,
-        //     manifestPath,
-        //     "application/vnd.apple.mpegurl",
-        // );
+        await storage.uploadFile(
+            manifestKey,
+            manifestPath,
+            "application/vnd.apple.mpegurl",
+        );
 
         // -----------------------------------------------------------------------
         // 6. Thumbnails (optional)
         // -----------------------------------------------------------------------
+        let thumbnailKey: string | null = null;
         if (generateThumbnail) {
-            logger.info("Stage 2b: Generating thumbnails…");
+            logger.info("Generating thumbnails…");
+            onProgress?.({
+                stage: 5,
+                pct: 0,
+                detail: "Generating thumbnails",
+            });
             const [thumbnailLocalPaths] = await generateThumbnails({
                 inputPath: localInputPath,
                 outputDir: jobTmpDir,
                 count: 1,
             });
 
-            const thumbnailKey = s3Keys.thumbnail(folderName);
-            // await storage.uploadFile(
-            //     thumbnailKey,
-            //     thumbnailLocalPaths,
-            //     "image/jpeg",
-            // );
+            thumbnailKey = s3Keys.thumbnail(folderName);
+
+            onProgress?.({
+                stage: 6,
+                pct: 0,
+                detail: "Uploading thumbnails",
+            });
+            await storage.uploadFile(
+                thumbnailKey,
+                thumbnailLocalPaths,
+                "image/jpeg",
+            );
         }
 
         logger.info({
@@ -218,16 +259,17 @@ export async function processHls(
         }, "upload complete");
 
         return {
-            manifestKey,
-            segments,
+            manifestKey: `${transcodeEnv.STREAM_URL}/${manifestKey}`,
+            mediaId,
+            thumbnailKey:`${transcodeEnv.STREAM_URL}/${thumbnailKey}`,
             totalDuration: segments.length *
                 transcodeEnv.TRANSCODE_SEGMENT_DURATION,
             filename: folderName,
-            rendition: "720p",
+            segments,
         };
     } finally {
         // Always clean up temp files — even on error
-        // await cleanupJobTmpDir(transcodeEnv.TRANSCODE_TMP_DIR, jobId);
+        await cleanupJobTmpDir(transcodeEnv.TRANSCODE_TMP_DIR, jobId);
         logger.debug({ jobId }, "temp files cleaned up");
     }
 }

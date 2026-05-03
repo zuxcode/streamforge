@@ -5,8 +5,8 @@ import { authEnv } from "./auth.env";
 
 const DEFAULT_MAX_UPLOAD_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
-export const ingestEnv = createEnv({
-    extends: [sharedEnv(), authEnv],
+export const ingestEnv = () => createEnv({
+    extends: [sharedEnv(), authEnv()],
     server: {
         // -----------------------------------------------------------------------------
         // ingest service

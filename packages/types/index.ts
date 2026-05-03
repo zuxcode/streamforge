@@ -16,14 +16,13 @@ export interface TranscodeJob {
   /** S3 path where the raw uploaded video is stored. */
   prefix: string;
 
-  /** S3 bucket name where the raw uploaded video is stored. */
-  bucketName: string;
-
   /** raw Filename */
   filename: string;
 
   /** ISO 8601 timestamp of when the upload was received. */
   uploadedAt: string;
+
+  mediaId: string | number;
 
   generateThumbnail: boolean;
 
@@ -56,15 +55,20 @@ export interface HlsOutput {
   /** S3 key for the .m3u8 manifest. */
   manifestKey: string;
 
-  /** Ordered list of segments referenced by the manifest. */
+  thumbnailKey: string | null;
+
+  // /** Ordered list of segments referenced by the manifest. */
   segments: HlsSegment[];
 
   /** Total duration of the video in seconds. */
   totalDuration: number;
 
-  /** Output resolution label, e.g. "720p". */
-  rendition: string;
+  // /** Output resolution label, e.g. "720p". */
+  // rendition: string;
+
   filename: string;
+
+  mediaId: string | number;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +107,9 @@ export interface FireWebhookPayload {
   data: {
     filename: string;
     durationMs: number;
+    manifestKey: string;
+    mediaId: string | number;
+    thumbnailKey: string;
   } | null;
 }
 

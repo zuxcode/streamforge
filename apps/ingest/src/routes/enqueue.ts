@@ -10,7 +10,7 @@ import { enqueueTranscodeJob, getQueueDepth } from "@streamforge/queue";
 
 import type { ErrorResponse, UploadAcceptedResponse } from "@streamforge/types";
 
-import { ingestEnv } from "@streamforge/env";
+import { ingestEnv  as env} from "@streamforge/env";
 import { getTranscodeQueue } from "../queues/queue-client";
 import { uploadPayloadSchema } from "../handlers/schema.zod";
 import { createLogger } from "@streamforge/logger";
@@ -21,6 +21,8 @@ import { createAuthMiddleware } from "@streamforge/auth";
  * ======================================================= */
 export const enqueueRoute = new Hono();
 const logger = createLogger("ingest:enqueue-route");
+
+const ingestEnv = env()
 
 /* =========================================================
  * Constants
@@ -64,11 +66,8 @@ enqueueRoute.post(
         generateThumbnail,
         webhookUrl,
         prefix,
-        bucketName,
         filename,
       } = payload;
-
-      logger.debug(payload);
 
       logger.info(
         {
@@ -88,7 +87,7 @@ enqueueRoute.post(
         requestId,
         filename,
         prefix,
-        bucketName,
+        mediaId,
         uploadedAt: new Date().toISOString(),
         generateThumbnail,
         webhookUrl,

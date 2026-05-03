@@ -67,10 +67,15 @@ export function getRedisConnection(redisUrl: string): RedisClient {
 async function fireWebhook(url: string, payload: FireWebhookPayload) {
     if (!url) return;
 
+    // const YOUR_API_KEY = "797c330b-a1ff-462d-aea0-009829191ff4";
+
     try {
         await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `users API-Key ${transcodeEnv.PUBLIC_KEY}`,
+            },
             body: JSON.stringify(payload),
         });
 
@@ -117,16 +122,27 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
                     /* ---------------- Core Processing ---------------- */
                     const result = await processHls(job.data, onProgress);
 
+                    const loggerPayload = {
+                        jobId,
+                        requestId,
+                        durationMs: Date.now() - start,
+                        segments: result.segments.length,
+                        manifestKey: result.manifestKey,
+                        thumbnail: "",
+                        totalDurationSec: result.totalDuration,
+                        wallClockMs: Date.now() - start,
+                    };
+
+                    if (
+                        "thumbnailKey" in result &&
+                        typeof result.thumbnailKey === "string"
+                    ) {
+                        loggerPayload.thumbnail = result
+                            .thumbnailKey;
+                    }
+
                     logger.info(
-                        {
-                            jobId,
-                            requestId,
-                            durationMs: Date.now() - start,
-                            segments: result.segments.length,
-                            manifestKey: result.manifestKey,
-                            totalDurationSec: result.totalDuration,
-                            wallClockMs: Date.now() - start,
-                        },
+                        loggerPayload,
                         "job completed",
                     );
 
@@ -212,6 +228,9 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
                     data: {
                         durationMs: result.totalDuration,
                         filename: result.filename,
+                        manifestKey: result.manifestKey,
+                        mediaId: result.mediaId,
+                        thumbnailKey: result.thumbnailKey,
                     },
                     status: "completed",
                 },
