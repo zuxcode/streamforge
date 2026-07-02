@@ -15,18 +15,19 @@ import {
 } from "@streamforge/queue";
 
 import type { TranscodeJob } from "@streamforge/types";
-import type { Queue, RedisClient } from "bullmq";
+import type { Queue } from "bullmq";
+import type IORedis from "ioredis";
 
 /* =========================================================
  * Internal State (Singletons)
  * ======================================================= */
-let connection: RedisClient | null = null;
+let connection: IORedis | null = null;
 let queue: Queue<TranscodeJob> | null = null;
 
 /* =========================================================
  * Helpers
  * ======================================================= */
-function attachConnectionListeners(conn: RedisClient) {
+function attachConnectionListeners(conn: IORedis) {
     const log = logConnection("Queue");
 
     conn.on("connecting", log.connecting);

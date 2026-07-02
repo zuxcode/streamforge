@@ -11,7 +11,7 @@ import { csrf } from "hono/csrf";
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv as env } from "@streamforge/env";
 import { createAuthMiddleware } from "@streamforge/auth";
-// import { closeTranscodeQueue, getTranscodeQueue } from "./queues/queue-client";
+import { closeTranscodeQueue, getTranscodeQueue } from "./queues/queue-client";
 // import { enqueueRoute } from "./routes/enqueue";
 // import { queueRoute } from "./handlers/queue-ui";
 
