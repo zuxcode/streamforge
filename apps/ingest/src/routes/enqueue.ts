@@ -39,11 +39,11 @@ const storage = createStorageClient({
 // requests for the lifetime of this process.
 // ---------------------------------------------------------------------------
 
-const authMiddleware = createAuthMiddleware({
-  publicKey: ingestEnv.AUTH_PUBLIC_KEY,
-});
+// const authMiddleware = createAuthMiddleware({
+//   publicKey: ingestEnv.AUTH_PUBLIC_KEY,
+// });
 
-enqueueRoute.use(ROUTE_PATH, authMiddleware);
+// enqueueRoute.use(ROUTE_PATH, authMiddleware);
 
 /* =========================================================
  * Route: POST /enqueue

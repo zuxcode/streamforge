@@ -26,9 +26,9 @@ const serveEnv = env();
 // auth service.
 // ---------------------------------------------------------------------------
 
-const authMiddleware = createAuthMiddleware({
-  publicKey: serveEnv.AUTH_PUBLIC_KEY,
-});
+// const authMiddleware = createAuthMiddleware({
+//   publicKey: serveEnv.AUTH_PUBLIC_KEY,
+// });
 /* =========================================================
  * App + Logger
  * ======================================================= */
@@ -62,7 +62,7 @@ app.use("*", prettyJSON());
 app.use(poweredBy({ serverName: "StreamForge" }));
 app.use(secureHeaders());
 
-app.use("*", authMiddleware);
+// app.use("*", authMiddleware);
 
 app.use("*", async (c, next) => {
   const start = Date.now();
