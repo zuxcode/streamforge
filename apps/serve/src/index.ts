@@ -13,7 +13,7 @@ import { serveEnv as env } from "@streamforge/env";
 import { streamRoute } from "./routes/stream";
 import { createAuthMiddleware } from "@streamforge/auth";
 
-// const serveEnv = env();
+const serveEnv = env();
 const app = new Hono();
 
 // const logger = createLogger("serve:Main");
@@ -35,26 +35,26 @@ const app = new Hono();
 /* =========================================================
  * CORS Config
  * ======================================================= */
-// const origin = serveEnv.SF_COR_ORIGIN === "*"
-//     ? "*"
-//     : serveEnv.SF_COR_ORIGIN.split(",").map((o) => o.trim());
+const origin = serveEnv.SF_COR_ORIGIN === "*"
+    ? "*"
+    : serveEnv.SF_COR_ORIGIN.split(",").map((o) => o.trim());
 
 /* =========================================================
  * Middleware
  * ======================================================= */
 app.use(honoLogger());
 app.use(trimTrailingSlash());
-// app.use(csrf({ origin }));
-// app.use(
-//     "*",
-//     cors({
-//         origin,
-//         allowMethods: ["GET", "POST", "HEAD", "OPTIONS"],
-//         credentials: serveEnv.SF_COR_ORIGIN !== "*",
-//         allowHeaders: ["Content-Type", "Authorization"],
-//         maxAge: 86400,
-//     }),
-// );
+app.use(csrf({ origin }));
+app.use(
+    "*",
+    cors({
+        origin,
+        allowMethods: ["GET", "POST", "HEAD", "OPTIONS"],
+        credentials: serveEnv.SF_COR_ORIGIN !== "*",
+        allowHeaders: ["Content-Type", "Authorization"],
+        maxAge: 86400,
+    }),
+);
 
 app.use("*", prettyJSON());
 app.use(poweredBy({ serverName: "StreamForge" }));
@@ -154,6 +154,6 @@ process.on("SIGTERM", shutdown);
 /* =========================================================
  * Dev Tools
  * ======================================================= */
-// if (serveEnv.NODE_ENV !== "production") {
-//     showRoutes(app);
-// }
+if (serveEnv.NODE_ENV !== "production") {
+    showRoutes(app);
+}
