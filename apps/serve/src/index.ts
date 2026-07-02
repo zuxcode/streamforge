@@ -10,7 +10,7 @@ import { poweredBy } from "hono/powered-by";
 import { prettyJSON } from "hono/pretty-json";
 import { showRoutes } from "hono/dev";
 import { csrf } from "hono/csrf";
-import { createAuthMiddleware } from "@streamforge/auth";
+// import { createAuthMiddleware } from "@streamforge/auth";
 
 
 const serveEnv = env();
