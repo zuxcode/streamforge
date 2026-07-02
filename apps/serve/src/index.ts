@@ -27,9 +27,9 @@ const logger = createLogger("serve:Main");
 // auth service.
 // ---------------------------------------------------------------------------
 
-// const authMiddleware = createAuthMiddleware({
-//   publicKey: serveEnv.AUTH_PUBLIC_KEY,
-// });
+const authMiddleware = createAuthMiddleware({
+  publicKey: serveEnv.AUTH_PUBLIC_KEY,
+});
 
 
 /* =========================================================
@@ -74,12 +74,12 @@ app.use("*", async (c, next) => {
     }, "request");
 });
 
-// app.use("*", authMiddleware);
+app.use("*", authMiddleware);
 
 /* =========================================================
  * Routes
  * ======================================================= */
-// app.route("/", streamRoute);
+app.route("/", streamRoute);
 
 app.get("/health", (c) =>
     c.json({
