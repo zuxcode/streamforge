@@ -1,3 +1,5 @@
+
+
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { trimTrailingSlash } from "hono/trailing-slash";
@@ -74,13 +76,9 @@ app.use("*", async (c, next) => {
     }, "request");
 });
 
-app.use("*", authMiddleware);
-
 /* =========================================================
- * Routes
+ * Public routes (registered before auth middleware)
  * ======================================================= */
-app.route("/", streamRoute);
-
 app.get("/health", (c) =>
     c.json({
         status: "ok",
@@ -89,6 +87,13 @@ app.get("/health", (c) =>
         runtime: "bun",
         framework: "hono",
     }));
+
+app.use("*", authMiddleware);
+
+/* =========================================================
+ * Routes
+ * ======================================================= */
+app.route("/", streamRoute);
 
 /* =========================================================
  * Error Handling
