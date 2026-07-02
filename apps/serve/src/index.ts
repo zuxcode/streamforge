@@ -120,8 +120,3 @@ process.on("SIGTERM", shutdown);
 //     showRoutes(app);
 // }
 
-// export default app;
-export default {
-    port: 3002,
-    fetch: app.fetch,
-};
