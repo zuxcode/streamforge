@@ -62,7 +62,7 @@ USER streamforge
 
 EXPOSE 3002
 
-# HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
-#   CMD wget -qO- http://localhost:3002/health || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+  CMD wget -qO- http://localhost:3002/health || exit 1
 
 CMD ["bun", "run", "dist/index.js"]
