@@ -8,35 +8,58 @@ import { prettyJSON } from "hono/pretty-json";
 import { showRoutes } from "hono/dev";
 import { csrf } from "hono/csrf";
 
+import { createLogger } from "@streamforge/logger";
+import { serveEnv as env } from "@streamforge/env";
+
+const serveEnv = env();
 const app = new Hono();
+
+const logger = createLogger("serve:Main");
 
 /* =========================================================
  * CORS Config
  * ======================================================= */
-// const origin = serveEnv.SF_COR_ORIGIN === "*"
-//   ? "*"
-//   : serveEnv.SF_COR_ORIGIN.split(",").map((o) => o.trim());
+const origin = serveEnv.SF_COR_ORIGIN === "*"
+  ? "*"
+  : serveEnv.SF_COR_ORIGIN.split(",").map((o) => o.trim());
 
 /* =========================================================
  * Middleware
  * ======================================================= */
 app.use(honoLogger());
 app.use(trimTrailingSlash());
-// app.use(csrf({ origin }));
-// app.use(
-//   "*",
-//   cors({
-//     origin,
-//     allowMethods: ["GET", "POST", "HEAD", "OPTIONS"],
-//     credentials: serveEnv.SF_COR_ORIGIN !== "*",
-//     allowHeaders: ["Content-Type", "Authorization"],
-//     maxAge: 86400,
-//   }),
-// );
+app.use(csrf({ origin }));
+app.use(
+  "*",
+  cors({
+    origin,
+    allowMethods: ["GET", "POST", "HEAD", "OPTIONS"],
+    credentials: serveEnv.SF_COR_ORIGIN !== "*",
+    allowHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
+  }),
+);
 
 app.use("*", prettyJSON());
 app.use(poweredBy({ serverName: "StreamForge" }));
 app.use(secureHeaders());
+
+
+app.use("*", async (c, next) => {
+  const start = Date.now();
+
+  await next();
+  logger.info({
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+    durationMs: Date.now() - start,
+    range: c.req.header("range") ?? undefined,
+    contentLength: c.res.headers.get("content-length") ?? undefined,
+  }, "request");
+});
+
+
 
 /* =========================================================
  * Routes
@@ -56,7 +79,7 @@ app.get("/health", (c) =>
  * Error Handling
  * ======================================================= */
 app.onError((err, c) => {
-    // logger.error(err, "Unhandled error");
+    logger.error(err, "Unhandled error");
 
     return c.json(
         {
@@ -80,32 +103,32 @@ app.notFound((c) =>
  * Server Startup
  * ======================================================= */
 const server = Bun.serve({
-    port: 3002,
+    port: serveEnv.SERVE_PORT,
     fetch: app.fetch,
 });
 
-// logger.info({
-//   port: serveEnv.SERVE_PORT,
-//   corsOrigins: serveEnv.SF_COR_ORIGIN,
-//   serverCacheTtl: serveEnv.SERVE_CACHE_TTL,
-//   nodeEnv: serveEnv.NODE_ENV,
-// }, "streamforge serve service started");
+logger.info({
+  port: serveEnv.SERVE_PORT,
+  corsOrigins: serveEnv.SF_COR_ORIGIN,
+  serverCacheTtl: serveEnv.SERVE_CACHE_TTL,
+  nodeEnv: serveEnv.NODE_ENV,
+}, "streamforge serve service started");
 
 /* =========================================================
  * Graceful Shutdown
  * ======================================================= */
 const shutdown = async (signal: string) => {
-    // logger.info(`Received ${signal}. Starting graceful shutdown...`);
+    logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
     await server.stop();
 
     try {
-        // logger.debug("Closing resources...");
+        logger.debug("Closing resources...");
 
-        // logger.info("Shutdown complete");
+        logger.info("Shutdown complete");
         process.exit(0);
     } catch (err) {
-        // logger.error(err, "Shutdown error");
+        logger.error(err, "Shutdown error");
         process.exit(1);
     }
 };
@@ -116,7 +139,7 @@ process.on("SIGTERM", shutdown);
 /* =========================================================
  * Dev Tools
  * ======================================================= */
-// if (serveEnv.NODE_ENV !== "production") {
-//     showRoutes(app);
-// }
+if (serveEnv.NODE_ENV !== "production") {
+    showRoutes(app);
+}
 
