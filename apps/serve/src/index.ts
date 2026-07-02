@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { serveEnv as env } from "@streamforge/env";
-import { streamRoute } from "./routes/stream";
-import { createLogger } from "@streamforge/logger";
+// import { streamRoute } from "./routes/stream";
+// import { createLogger } from "@streamforge/logger";
 import { cors } from "hono/cors";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import { logger as honoLogger } from "hono/logger";
@@ -12,9 +12,7 @@ import { showRoutes } from "hono/dev";
 import { csrf } from "hono/csrf";
 import { createAuthMiddleware } from "@streamforge/auth";
 
-// ---------------------------------------------------------------------------
-// App
-// ---------------------------------------------------------------------------
+
 const serveEnv = env();
 
 // ---------------------------------------------------------------------------
@@ -33,7 +31,7 @@ const serveEnv = env();
  * App + Logger
  * ======================================================= */
 const app = new Hono();
-const logger = createLogger("serve:Main");
+// const logger = createLogger("serve:Main");
 
 /* =========================================================
  * CORS Config
@@ -68,20 +66,20 @@ app.use("*", async (c, next) => {
   const start = Date.now();
 
   await next();
-  logger.info({
-    method: c.req.method,
-    path: c.req.path,
-    status: c.res.status,
-    durationMs: Date.now() - start,
-    range: c.req.header("range") ?? undefined,
-    contentLength: c.res.headers.get("content-length") ?? undefined,
-  }, "request");
+  // logger.info({
+  //   method: c.req.method,
+  //   path: c.req.path,
+  //   status: c.res.status,
+  //   durationMs: Date.now() - start,
+  //   range: c.req.header("range") ?? undefined,
+  //   contentLength: c.res.headers.get("content-length") ?? undefined,
+  // }, "request");
 });
 
 /* =========================================================
  * Routes
  * ======================================================= */
-app.route("/", streamRoute);
+// app.route("/", streamRoute);
 
 app.get("/health", (c) =>
   c.json({
@@ -96,7 +94,7 @@ app.get("/health", (c) =>
  * Error Handling
  * ======================================================= */
 app.onError((err, c) => {
-  logger.error(err, "Unhandled error");
+  // logger.error(err, "Unhandled error");
 
   return c.json(
     {
@@ -124,28 +122,28 @@ const server = Bun.serve({
   fetch: app.fetch,
 });
 
-logger.info({
-  port: serveEnv.SERVE_PORT,
-  corsOrigins: serveEnv.SF_COR_ORIGIN,
-  serverCacheTtl: serveEnv.SERVE_CACHE_TTL,
-  nodeEnv: serveEnv.NODE_ENV,
-}, "streamforge serve service started");
+// logger.info({
+//   port: serveEnv.SERVE_PORT,
+//   corsOrigins: serveEnv.SF_COR_ORIGIN,
+//   serverCacheTtl: serveEnv.SERVE_CACHE_TTL,
+//   nodeEnv: serveEnv.NODE_ENV,
+// }, "streamforge serve service started");
 
 /* =========================================================
  * Graceful Shutdown
  * ======================================================= */
 const shutdown = async (signal: string) => {
-  logger.info(`Received ${signal}. Starting graceful shutdown...`);
+  // logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
   await server.stop();
 
   try {
-    logger.debug("Closing resources...");
+    // logger.debug("Closing resources...");
 
-    logger.info("Shutdown complete");
+    // logger.info("Shutdown complete");
     process.exit(0);
   } catch (err) {
-    logger.error(err, "Shutdown error");
+    // logger.error(err, "Shutdown error");
     process.exit(1);
   }
 };
