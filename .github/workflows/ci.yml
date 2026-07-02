@@ -1,0 +1,82 @@
+name: CI Pipeline
+on:
+  push:
+    branches: [master, dev]
+  pull_request:
+    branches: [master, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # STAGE 1 — Quality Gate  (all jobs run in parallel)
+  # Stage 2 waits for all of them to pass.
+  # ─────────────────────────────────────────────────────────────
+  lint:
+    name: 'Stage 1 › Lint'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bun-setup
+      - name: Run ESLint
+        run: bun run lint
+
+  type-check:
+    name: 'Stage 1 › Type Check'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bun-setup
+      - name: Run tsc across workspaces
+        run: bun run --filter '*' typecheck
+
+  prettier:
+    name: 'Stage 1 › Prettier'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bun-setup
+      - name: Run Prettier Check
+        run: bun run prettier:check
+
+  package-audit:
+    name: 'Stage 1 › Package Audit'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bun-setup
+      - name: Run Bun Audit
+        # NOTE: continue-on-error means this job always reports "success" to
+        # `needs`, so it never actually blocks Stage 2 — informational only.
+        # Flip this off if you want high-severity vulns to gate the pipeline.
+        continue-on-error: true
+        run: bun audit --audit-level=high | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ─────────────────────────────────────────────────────────────
+  # STAGE 2 — Verify  (runs after all Stage 1 jobs pass)
+  # Tests run per-service since ingest/serve/transcode are
+  # independently deployable — a failure in one shouldn't be
+  # masked by the others, and this matrix parallelizes nicely.
+  # ─────────────────────────────────────────────────────────────
+  test:
+    name: 'Stage 2 › Unit Tests (${{ matrix.service }})'
+    needs: [lint, type-check, prettier, package-audit]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [ingest, serve, transcode]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bun-setup
+
+      - name: Run Unit Tests
+        run: bun test apps/${{ matrix.service }}
+        env:
+          NODE_ENV: test
+
+  # Docker image build/push is handled separately in build-push.yml,
+  # triggered off this workflow's completion — mirrors MFX's
+  # Deploy-to-Hostinger pattern of gating on CI Pipeline success.

@@ -1,0 +1,24 @@
+{
+  "name": "@streamforge/serve",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun run dist/index.js",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@payloadcms/sdk": "3.85.1",
+    "@streamforge/auth": "workspace:*",
+    "@streamforge/env": "workspace:*",
+    "@streamforge/logger": "workspace:*",
+    "@streamforge/storage": "workspace:*",
+    "@streamforge/types": "workspace:*",
+    "hono": "^4.3.11"
+  }
+}

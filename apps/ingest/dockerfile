@@ -1,0 +1,68 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# Stage 1: install dependencies
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS deps
+
+WORKDIR /app
+
+COPY package.json bun.lock* bunfig.toml  ./
+
+COPY apps/serve/package.json ./apps/serve/
+COPY apps/ingest/package.json ./apps/ingest/
+COPY apps/transcode/package.json ./apps/transcode/
+
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/env/package.json ./packages/env/
+COPY packages/logger/package.json ./packages/logger/
+COPY packages/queue/package.json ./packages/queue/
+COPY packages/storage/package.json ./packages/storage/
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
+
+RUN bun install --frozen-lockfile
+
+# ---------------------------------------------------------------------------
+# Stage 2: build
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS build
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/~ ./~
+
+COPY --from=deps /app/apps/serve/node_modules ./apps/serve/node_modules
+COPY --from=deps /app/apps/ingest/node_modules ./apps/ingest/node_modules
+COPY --from=deps /app/apps/transcode/node_modules ./apps/transcode/node_modules
+COPY --from=deps /app/packages ./packages
+
+COPY . .
+
+RUN bun build apps/ingest/src/index.ts \
+      --outdir apps/ingest/dist \
+      --target bun \
+      --minify
+
+# ---------------------------------------------------------------------------
+# Stage 3: runtime
+# ---------------------------------------------------------------------------
+FROM oven/bun:1-alpine AS runtime
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup -S streamforge && adduser -S -G streamforge streamforge
+
+COPY --from=build --chown=streamforge:streamforge /app/apps/ingest/dist ./dist
+
+USER streamforge
+
+EXPOSE 3045
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+  CMD wget -qO- http://localhost:3045/health || exit 1
+
+CMD ["bun", "run", "dist/index.js"]

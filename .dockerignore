@@ -1,0 +1,45 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Dependencies — always installed fresh in the deps stage
+node_modules
+**/node_modules
+~
+
+# Build output — regenerated in the build stage, never trust host copies
+**/dist
+**/build
+**/.next
+**/.turbo
+
+# Env & secrets — never bake into an image layer
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+bun-debug.log*
+
+# Editor/OS cruft
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Docs & non-build assets — not needed inside build context
+**/*.md
+!README.md
+docs/
+
+# Test artifacts
+coverage
+**/*.test.ts
+**/*.spec.ts
+**/__tests__
+
+# CI/tooling configs irrelevant to the Docker build itself
+.github/workflows

@@ -1,0 +1,109 @@
+name: Build & Push StreamForge Images
+
+on:
+  workflow_run:
+    workflows: ['CI Pipeline']
+    branches: [master]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: build-push-${{ github.ref }}
+  cancel-in-progress: true # safe to cancel here — nothing on the VPS is touched yet
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # STAGE 0 — Preflight
+  # Gate: only run on CI success or manual dispatch.
+  # ─────────────────────────────────────────────────────────────
+  preflight:
+    name: 'Stage 0 › Gate'
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: No-op gate
+        run: echo "Preflight passed — proceeding to build."
+
+  # ─────────────────────────────────────────────────────────────
+  # STAGE 1 — Build & Push (matrix, parallel)
+  # One job definition, three services — all build from repo root
+  # context since it's a bun workspace monorepo.
+  # ─────────────────────────────────────────────────────────────
+  build-and-push:
+    name: 'Stage 1 › ${{ matrix.service.name }} Image Build & Push'
+    needs: [preflight]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: ingest
+            dockerfile: apps/ingest/Dockerfile
+            image_suffix: ingest
+          - name: serve
+            dockerfile: apps/serve/Dockerfile
+            image_suffix: serve
+          - name: transcode
+            dockerfile: apps/transcode/Dockerfile
+            image_suffix: transcode
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute short SHA
+        id: sha
+        run: echo "short=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.service.image_suffix }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.service.name }} image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service.name }}
+          cache-to: type=gha,scope=${{ matrix.service.name }},mode=max
+
+  # ─────────────────────────────────────────────────────────────
+  # STAGE 2 — Summary gate
+  # Single required check for branch protection, instead of
+  # depending on 3 separate matrix job names.
+  # ─────────────────────────────────────────────────────────────
+  build-summary:
+    name: 'All Images Built'
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check matrix result
+        run: |
+          if [ "${{ needs.build-and-push.result }}" != "success" ]; then
+            echo "One or more service builds failed."
+            exit 1
+          fi
+          echo "All service images built and pushed successfully."

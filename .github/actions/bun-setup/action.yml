@@ -1,0 +1,17 @@
+name: Bun Setup
+description: Installs Bun and installs workspace dependencies
+
+runs:
+  using: composite
+  steps:
+    - name: Install Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        # Pin to match the runtime version used in the app Dockerfiles
+        # (oven/bun:1-alpine). Keep these in sync — a CI/runtime version
+        bun-version: '1.3.14'
+
+    - name: Install Dependencies
+      run: bun install --frozen-lockfile
+      shell: bash
+
