@@ -10,18 +10,28 @@ import { csrf } from "hono/csrf";
 
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv as env } from "@streamforge/env";
-
+import { createAuthMiddleware } from "@streamforge/auth";
 import { closeTranscodeQueue, getTranscodeQueue } from "./queues/queue-client";
-
 import { enqueueRoute } from "./routes/enqueue";
 import { queueRoute } from "./handlers/queue-ui";
 
 const ingestEnv = env();
-
 getTranscodeQueue(ingestEnv.SF_REDIS_URL);
 
 const app = new Hono();
 const logger = createLogger("ingest:main-service");
+
+// ---------------------------------------------------------------------------
+// Auth middleware
+//
+// Enqueueing a transcode job is not free — it costs Redis/queue capacity and
+// eventually real transcode compute. Anyone who can reach POST /enqueue can
+// force work onto the pipeline, so it's gated the same way `serve` gates
+// stream access.
+// ---------------------------------------------------------------------------
+const authMiddleware = createAuthMiddleware({
+  publicKey: ingestEnv.AUTH_PUBLIC_KEY,
+});
 
 const origin = ingestEnv.SF_COR_ORIGIN === "*"
   ? "*"
@@ -30,7 +40,6 @@ const origin = ingestEnv.SF_COR_ORIGIN === "*"
 app.use(honoLogger());
 app.use(trimTrailingSlash());
 app.use(csrf({ origin }));
-
 app.use(
   "*",
   cors({
@@ -50,7 +59,6 @@ app.use(secureHeaders());
 app.use("*", async (c, next) => {
   const start = Date.now();
   await next();
-
   logger.info(
     {
       method: c.req.method,
@@ -63,21 +71,29 @@ app.use("*", async (c, next) => {
   );
 });
 
-app.route("/", queueRoute);
-app.route("/", enqueueRoute);
-
+/* =========================================================
+ * Public routes (registered before auth middleware)
+ * ======================================================= */
 app.get("/health", (c) =>
   c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime,
+    uptime: process.uptime(),
     runtime: "bun",
     framework: "hono",
   }));
 
+app.route("/", queueRoute);
+
+app.use("*", authMiddleware);
+
+/* =========================================================
+ * Routes
+ * ======================================================= */
+app.route("/", enqueueRoute);
+
 app.onError((err, c) => {
   logger.error(err, "Unhandled error");
-
   return c.json(
     {
       success: false,
@@ -122,13 +138,10 @@ logger.info(
  * ======================================================= */
 const shutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
-
   await server.stop();
-
   try {
     logger.debug("Closing resources...");
     await closeTranscodeQueue();
-
     logger.info("Shutdown complete");
     process.exit(0);
   } catch (err) {
