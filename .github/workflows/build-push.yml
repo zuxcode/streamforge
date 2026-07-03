@@ -52,6 +52,9 @@ jobs:
           - name: transcode
             dockerfile: apps/transcode/Dockerfile
             image_suffix: transcode
+          - name: queue-ui
+            dockerfile: apps/queue-ui/Dockerfile
+            image_suffix: queue-ui
     steps:
       - uses: actions/checkout@v4
 
