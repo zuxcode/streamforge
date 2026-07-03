@@ -21,9 +21,7 @@
     "@streamforge/queue": "workspace:*",
     "@streamforge/storage": "workspace:*",
     "@streamforge/types": "workspace:*",
-    "bullmq": "5.79.2",
     "hono": "^4.12.9",
-    "ioredis": "5.11.1",
     "uuid": "13.0.0",
     "zod": "4.3.6"
   }

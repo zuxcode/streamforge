@@ -7,7 +7,7 @@ import { enqueueTranscodeJob, getQueueDepth } from "@streamforge/queue";
 import type { ErrorResponse, UploadAcceptedResponse } from "@streamforge/types";
 
 import { ingestEnv as env } from "@streamforge/env";
-import { getTranscodeQueue } from "../queues/queue-client";
+import { getTranscodeQueue } from "@streamforge/queue/queue-client";
 import { uploadPayloadSchema } from "../handlers/schema.zod";
 import { createLogger } from "@streamforge/logger";
 import { createAuthMiddleware } from "@streamforge/auth";

@@ -7,7 +7,7 @@ import { HonoAdapter } from "@bull-board/hono";
 
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv as env } from "@streamforge/env/ingest.env";
-import { getTranscodeQueue } from "../queues/queue-client";
+import { getTranscodeQueue } from "@streamforge/queue/queue-client";
 
 /* =========================================================
  * App + Logger
@@ -15,7 +15,7 @@ import { getTranscodeQueue } from "../queues/queue-client";
 export const queueRoute = new Hono();
 const logger = createLogger("ingest:queue-ui");
 
-const ingestEnv = env()
+const ingestEnv = env();
 
 /* =========================================================
  * Constants

@@ -15,6 +15,6 @@
     "@streamforge/logger": "workspace:*",
     "@streamforge/types": "workspace:*",
     "bullmq": "5.79.2",
-    "ioredis": "5.11.1"
+    "ioredis": "5.10.1"
   }
 }

@@ -11,12 +11,10 @@ import { csrf } from "hono/csrf";
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv as env } from "@streamforge/env";
 import { createAuthMiddleware } from "@streamforge/auth";
-import { closeTranscodeQueue, getTranscodeQueue } from "./queues/queue-client";
-// import { enqueueRoute } from "./routes/enqueue";
-// import { queueRoute } from "./handlers/queue-ui";
+import { closeTranscodeQueue, getTranscodeQueue } from "@streamforge/queue";
 
 const ingestEnv = env();
-// getTranscodeQueue(ingestEnv.SF_REDIS_URL);
+getTranscodeQueue(ingestEnv.SF_REDIS_URL);
 
 const app = new Hono();
 const logger = createLogger("ingest:main-service");
@@ -141,7 +139,7 @@ const shutdown = async (signal: string) => {
   await server.stop();
   try {
     logger.debug("Closing resources...");
-    // await closeTranscodeQueue();
+    await closeTranscodeQueue();
     logger.info("Shutdown complete");
     process.exit(0);
   } catch (err) {

@@ -20,7 +20,6 @@
     "@streamforge/types": "workspace:*",
     "@streamforge/utils": "workspace:*",
     "bullmq": "^5.7.1",
-    "ioredis": "^5.4.1",
     "p-limit": "7.3.0"
   }
 }
