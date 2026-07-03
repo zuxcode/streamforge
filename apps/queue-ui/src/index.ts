@@ -41,6 +41,15 @@ function setupBullBoard() {
   return serverAdapter;
 }
 
+queueRoute.get("/health", (c) =>
+    c.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime,
+        runtime: "bun",
+        framework: "hono",
+    }));
+
 /* =========================================================
  * Route Registration
  * ======================================================= */
