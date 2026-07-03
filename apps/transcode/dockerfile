@@ -12,6 +12,7 @@ COPY package.json bun.lock* bunfig.toml  ./
 COPY apps/serve/package.json ./apps/serve/
 COPY apps/ingest/package.json ./apps/ingest/
 COPY apps/transcode/package.json ./apps/transcode/
+COPY apps/queue-ui/package.json ./apps/queue-ui/
 
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/env/package.json ./packages/env/
@@ -40,14 +41,10 @@ COPY --from=deps /app/packages ./packages
 
 COPY . .
 
-# RUN bun build apps/transcode/src/index.ts \
-#       --outdir apps/transcode/dist \
-#       --target bun \
-#       --minify
-
 RUN bun build apps/transcode/src/index.ts \
       --outdir apps/transcode/dist \
-      --target bun
+      --target bun \
+      --minify
 
 # ---------------------------------------------------------------------------
 # Stage 3: runtime (includes ffmpeg)

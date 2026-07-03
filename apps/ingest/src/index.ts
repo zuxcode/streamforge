@@ -13,7 +13,6 @@ import { ingestEnv as env } from "@streamforge/env";
 import { createAuthMiddleware } from "@streamforge/auth";
 import { closeTranscodeQueue, getTranscodeQueue } from "@streamforge/queue";
 import { enqueueRoute } from "./routes/enqueue";
-import { queueRoute } from "./handlers/queue-ui";
 
 const ingestEnv = env();
 getTranscodeQueue(ingestEnv.SF_REDIS_URL);
@@ -82,7 +81,6 @@ app.get("/health", (c) =>
     runtime: "bun",
     framework: "hono",
   }));
-// app.route("/", queueRoute);
 
 app.use("*", authMiddleware);
 

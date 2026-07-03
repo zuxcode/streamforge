@@ -2,12 +2,13 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import { sharedEnv } from "./shared.env";
 import { authEnv } from "./auth.env";
+import { storageEnv } from "./storage.env";
 
 const CACHE_TTL = 60 * 60 * 24;
 
 export const serveEnv = () =>
     createEnv({
-        extends: [sharedEnv(), authEnv()],
+        extends: [sharedEnv(), authEnv(), storageEnv()],
         server: {
             // -----------------------------------------------------------------------------
             // serve service

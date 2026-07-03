@@ -1,10 +1,11 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import { sharedEnv } from "./shared.env";
+import { storageEnv } from "./storage.env";
 
 export const transcodeEnv = () =>
     createEnv({
-        extends: [sharedEnv()],
+        extends: [sharedEnv(), storageEnv()],
         server: {
             // -----------------------------------------------------------------------------
             // transcode service

@@ -1,21 +1,19 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
-
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { HonoAdapter } from "@bull-board/hono";
 
 import { createLogger } from "@streamforge/logger";
-import { ingestEnv as env } from "@streamforge/env/ingest.env";
-import { getTranscodeQueue } from "@streamforge/queue/queue-client";
+import { queueUiEnv as env } from "@streamforge/env";
+import { getTranscodeQueue } from "@streamforge/queue";
 
 /* =========================================================
  * App + Logger
  * ======================================================= */
 export const queueRoute = new Hono();
-const logger = createLogger("ingest:queue-ui");
-
-const ingestEnv = env();
+const logger = createLogger("queue-ui:bull-board");
+const queueUiEnv = env();
 
 /* =========================================================
  * Constants
@@ -26,18 +24,21 @@ const BASE_PATH = "/queue/ui";
  * Bull Board Setup (encapsulated)
  * ======================================================= */
 function setupBullBoard() {
-    const serverAdapter = new HonoAdapter(serveStatic);
+  const serverAdapter = new HonoAdapter(serveStatic);
+  const queue = getTranscodeQueue(queueUiEnv.SF_REDIS_URL);
 
-    const queue = getTranscodeQueue(ingestEnv.SF_REDIS_URL);
+  // setBasePath must run BEFORE createBullBoard — createBullBoard registers
+  // the adapter's routes/asset references at setup time, so if the base
+  // path isn't set first those routes get generated against the wrong
+  // (default) path.
+  serverAdapter.setBasePath(BASE_PATH);
 
-    createBullBoard({
-        queues: [new BullMQAdapter(queue)],
-        serverAdapter,
-    });
+  createBullBoard({
+    queues: [new BullMQAdapter(queue)],
+    serverAdapter,
+  });
 
-    serverAdapter.setBasePath(BASE_PATH);
-
-    return serverAdapter;
+  return serverAdapter;
 }
 
 /* =========================================================
@@ -49,14 +50,10 @@ queueRoute.route(BASE_PATH, serverAdapter.registerPlugin());
 /* =========================================================
  * Logging
  * ======================================================= */
+// Note: this runs at module-import time, before Bun.serve() has bound to a
+// port in index.ts — so this only confirms setup completed, not that the
+// UI is reachable yet. Avoid claiming a live URL here.
 logger.info(
-    {
-        url: `http://localhost:${ingestEnv.INGEST_PORT}${BASE_PATH}`,
-        basePath: BASE_PATH,
-    },
-    "Bull Board UI available",
+  { basePath: BASE_PATH },
+  "Bull Board queue UI route registered",
 );
-
-logger.info("Hono + Bull Board initialized");
-
-export { BASE_PATH as queueUIBasePath };

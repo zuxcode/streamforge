@@ -1,0 +1,14 @@
+{
+  "name": "queue-ui",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "@bull-board/api": "8.1.0",
+    "@bull-board/hono": "8.1.0",
+    "@streamforge/env": "workspace:*",
+    "@streamforge/logger": "workspace:*",
+    "@streamforge/queue": "workspace:*",
+    "hono": "^4.12.27"
+  }
+}
