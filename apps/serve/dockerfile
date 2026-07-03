@@ -40,10 +40,14 @@ COPY --from=deps /app/packages ./packages
 
 COPY . .
 
-RUN bun build apps/serve/src/index.ts \
-      --outdir apps/serve/dist \
-      --target bun \
-      --minify
+# RUN bun build apps/serve/src/index.ts \
+#       --outdir apps/serve/dist \
+#       --target bun \
+#       --minify
+
+RUN bun build apps/ingest/src/index.ts \
+      --outdir apps/ingest/dist \
+      --target bun 
 
 # ---------------------------------------------------------------------------
 # Stage 3: runtime
@@ -62,7 +66,7 @@ USER streamforge
 
 EXPOSE 3002
 
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
-  CMD wget -qO- http://localhost:3002/health || exit 1
+# HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+#   CMD wget -qO- http://localhost:3002/health || exit 1
 
 CMD ["bun", "run", "dist/index.js"]
