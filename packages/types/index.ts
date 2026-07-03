@@ -160,3 +160,14 @@ export interface AuthenticatedUser {
   /** Current subscription status. */
   subscription: SubscriptionStatus;
 }
+
+
+
+export type ErrorClass = "retriable" | "terminal";
+
+export interface ClassifiedError {
+  class: ErrorClass;
+  code: string;
+  message: string;
+  originalError: unknown;
+}

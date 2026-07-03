@@ -13,15 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { StorageKeyNotFoundError } from "@streamforge/storage";
-
-export type ErrorClass = "retriable" | "terminal";
-
-export interface ClassifiedError {
-  class: ErrorClass;
-  code: string;
-  message: string;
-  originalError: unknown;
-}
+import type { ClassifiedError } from "@streamforge/types";
 
 /**
  * ffmpeg exit codes that indicate a problem with the *input file* rather

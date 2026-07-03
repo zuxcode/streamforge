@@ -18,6 +18,7 @@ import {
 import type { TranscodeJob } from "@streamforge/types";
 import type { Queue } from "bullmq";
 import type IORedis from "ioredis";
+import { attachConnectionListeners } from "./utils";
 
 /* =========================================================
  * Internal State (Singletons)
@@ -26,17 +27,7 @@ let connection: IORedis | null = null;
 let queue: Queue<TranscodeJob> | null = null;
 let connectionRedisUrl: string | null = null;
 
-/* =========================================================
- * Helpers
- * ======================================================= */
-function attachConnectionListeners(conn: IORedis) {
-    const log = logConnection("Queue");
-    conn.on("connecting", log.connecting);
-    conn.on("connect", log.connect);
-    conn.on("error", log.error);
-    conn.on("close", log.close);
-    conn.on("reconnecting", log.reconnecting);
-}
+
 
 /* =========================================================
  * Public API
