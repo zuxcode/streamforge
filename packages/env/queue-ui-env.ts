@@ -1,10 +1,9 @@
 import { createEnv } from "@t3-oss/env-core";
-import { serveEnv } from "./serve.env";
-
+import { sharedEnv } from "./shared.env";
 
 export const queueUiEnv = () =>
     createEnv({
-        extends: [serveEnv()],
+        extends: [sharedEnv()],
         server: {},
         runtimeEnv: process.env,
 
