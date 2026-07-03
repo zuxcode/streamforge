@@ -12,6 +12,8 @@ import { createLogger } from "@streamforge/logger";
 import { ingestEnv as env } from "@streamforge/env";
 import { createAuthMiddleware } from "@streamforge/auth";
 import { closeTranscodeQueue, getTranscodeQueue } from "@streamforge/queue";
+import { enqueueRoute } from "./routes/enqueue";
+import { queueRoute } from "./handlers/queue-ui";
 
 const ingestEnv = env();
 getTranscodeQueue(ingestEnv.SF_REDIS_URL);
@@ -81,14 +83,13 @@ app.get("/health", (c) =>
     framework: "hono",
   }));
 
-// app.route("/", queueRoute);
-
 app.use("*", authMiddleware);
+app.route("/", queueRoute);
 
 /* =========================================================
- * Routes
- * ======================================================= */
-// app.route("/", enqueueRoute);
+* Routes
+* ======================================================= */
+app.route("/", enqueueRoute);
 
 app.onError((err, c) => {
   logger.error(err, "Unhandled error");
@@ -157,5 +158,3 @@ process.on("SIGTERM", shutdown);
 if (ingestEnv.NODE_ENV !== "production") {
   showRoutes(app);
 }
-
-export { app };
