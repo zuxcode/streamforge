@@ -10,19 +10,23 @@
 
 import { type Job, UnrecoverableError, Worker } from "bullmq";
 import type IORedis from "ioredis";
-import { createRedisConnection, logConnection, QUEUE_NAMES } from "./setup";
+import {
+    createRedisConnection,
+    logConnection,
+    QUEUE_NAMES,
+} from "@streamforge/queue/setup";
 
 import type {
-    ClassifiedError,
     FireWebhookPayload,
-    HlsOutput,
     onProgress,
     TranscodeJob,
 } from "@streamforge/types";
 
 import { transcodeEnv as env } from "@streamforge/env";
 import { createLogger } from "@streamforge/logger";
-import { attachConnectionListeners } from "./utils";
+import { attachConnectionListeners } from "@streamforge/queue/utils";
+import { processHls } from "../processors/hls-processor";
+import { classifyError } from "../utils/error-classifier";
 
 const transcodeEnv = env();
 
@@ -132,17 +136,8 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
 /* =========================================================
  * Worker Factory
  * ======================================================= */
-interface CreateTranscodeWorkerProps {
-    processor: (
-        job: TranscodeJob,
-        onProgress?: onProgress,
-    ) => Promise<HlsOutput>;
-    errorHandler: (err: unknown) => ClassifiedError;
-}
 
-export function createTranscodeWorker(
-    { errorHandler, processor }: CreateTranscodeWorkerProps,
-): Worker<TranscodeJob> {
+export function createTranscodeWorker(): Worker<TranscodeJob> {
     if (!worker) {
         worker = new Worker<TranscodeJob>(
             QUEUE_NAMES.transcode,
@@ -168,7 +163,7 @@ export function createTranscodeWorker(
                     };
 
                     /* ---------------- Core Processing ---------------- */
-                    const result = await processor(job.data, onProgress);
+                    const result = await processHls(job.data, onProgress);
 
                     const loggerPayload = {
                         jobId,
@@ -196,7 +191,7 @@ export function createTranscodeWorker(
 
                     return result;
                 } catch (err) {
-                    const classified = errorHandler(err);
+                    const classified = classifyError(err);
 
                     logger.error(
                         {

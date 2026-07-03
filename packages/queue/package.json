@@ -11,9 +11,12 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@streamforge/env": "workspace:*",
     "@streamforge/logger": "workspace:*",
     "@streamforge/types": "workspace:*",
+    "bullmq": "5.79.2",
+    "ioredis": "5.10.1"
+  },
+  "peerDependencies": {
     "bullmq": "5.79.2",
     "ioredis": "5.10.1"
   }

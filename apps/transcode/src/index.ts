@@ -2,9 +2,7 @@ import { mkdir } from "node:fs/promises";
 
 import { transcodeEnv } from "@streamforge/env";
 import { createLogger } from "@streamforge/logger";
-import { closeTranscodeWorker, createTranscodeWorker } from "@streamforge/queue";
-import { processHls } from "./processors/hls-processor";
-import { classifyError } from "./utils/error-classifier";
+import { closeTranscodeWorker, createTranscodeWorker } from "./workers/worker-client";
 
 const env = transcodeEnv();
 
@@ -15,7 +13,7 @@ async function bootstrap() {
   await mkdir(env.TRANSCODE_TMP_DIR, { recursive: true });
 
   // Start worker
-  createTranscodeWorker({ processor: processHls, errorHandler: classifyError });
+  createTranscodeWorker();
 
   log.info(
     {

@@ -4,5 +4,5 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["./**/*"]
+  "include": ["./**/*", "../../apps/transcode/src/workers/worker-client.ts"]
 }
