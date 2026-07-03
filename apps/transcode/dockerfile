@@ -45,9 +45,9 @@ COPY . .
 #       --target bun \
 #       --minify
 
-RUN bun build apps/ingest/src/index.ts \
-      --outdir apps/ingest/dist \
-      --target bun 
+RUN bun build apps/transcode/src/index.ts \
+      --outdir apps/transcode/dist \
+      --target bun
 
 # ---------------------------------------------------------------------------
 # Stage 3: runtime (includes ffmpeg)
