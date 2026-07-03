@@ -1,17 +1,19 @@
-import { Hono } from "hono";
-import { serveStatic } from "hono/bun";
-import { createBullBoard } from "@bull-board/api";
-import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { HonoAdapter } from "@bull-board/hono";
+"use strict";
 
-import { createLogger } from "@streamforge/logger";
-import { queueUiEnv as env } from "@streamforge/env";
-import { getTranscodeQueue } from "@streamforge/queue";
+const { Hono } = require("hono");
+const { serveStatic } = require("hono/bun");
+const { createBullBoard } = require("@bull-board/api");
+const { BullMQAdapter } = require("@bull-board/api/bullMQAdapter");
+const { HonoAdapter } = require("@bull-board/hono");
+
+const { createLogger } = require("@streamforge/logger");
+const { queueUiEnv: env } = require("@streamforge/env");
+const { getTranscodeQueue } = require("@streamforge/queue");
 
 /* =========================================================
  * App + Logger
  * ======================================================= */
-export const queueRoute = new Hono();
+const queueRoute = new Hono();
 const logger = createLogger("queue-ui:bull-board");
 const queueUiEnv = env();
 
@@ -42,13 +44,13 @@ function setupBullBoard() {
 }
 
 queueRoute.get("/health", (c) =>
-    c.json({
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime,
-        runtime: "bun",
-        framework: "hono",
-    }));
+  c.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    runtime: "bun",
+    framework: "hono",
+  }));
 
 /* =========================================================
  * Route Registration
@@ -59,10 +61,12 @@ queueRoute.route(BASE_PATH, serverAdapter.registerPlugin());
 /* =========================================================
  * Logging
  * ======================================================= */
-// Note: this runs at module-import time, before Bun.serve() has bound to a
-// port in index.ts — so this only confirms setup completed, not that the
+// Note: this runs at module-require time, before Bun.serve() has bound to a
+// port in index.js — so this only confirms setup completed, not that the
 // UI is reachable yet. Avoid claiming a live URL here.
 logger.info(
   { basePath: BASE_PATH },
   "Bull Board queue UI route registered",
 );
+
+module.exports = { queueRoute, queueUIBasePath: BASE_PATH };

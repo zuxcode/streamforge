@@ -35,16 +35,12 @@ COPY --from=deps /app/packages ./packages
 
 COPY . .
 
-# RUN bun build apps/queue-ui/src/index.ts \
-#       --outdir apps/queue-ui/dist \
-#       --target bun \
-#       --minify
-
 RUN bun build apps/queue-ui/src/index.ts \
   --outdir apps/queue-ui/dist \
   --target bun \
-  --external "@bull-board/*" \
+  --format cjs \
   --minify
+  #   --external "@bull-board/*" \
 
 # ---------------------------------------------------------------------------
 # Stage 3: runtime

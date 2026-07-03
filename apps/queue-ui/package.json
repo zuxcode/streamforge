@@ -1,5 +1,6 @@
 {
   "name": "queue-ui",
+  "type": "commonjs",
   "scripts": {
     "dev": "bun run --hot src/index.ts"
   },
