@@ -93,7 +93,7 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
                 // token looked like a leftover typo rather than an intentional
                 // auth scheme. Confirm the receiving endpoint's expected
                 // scheme if this isn't right.
-                Authorization: `API-Key ${transcodeEnv.PUBLIC_KEY}`,
+                Authorization: `API-Key ${transcodeEnv.API_KEY}`,
             },
             body: JSON.stringify(payload),
         });

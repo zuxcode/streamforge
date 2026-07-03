@@ -1,14 +1,16 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-export const authEnv = () => createEnv({
-    server: {
-        AUTH_PUBLIC_KEY: z.string(),
-        AUTH_CACHE_TTL_SEC: z.coerce.number().optional(),
-    },
+export const authEnv = () =>
+    createEnv({
+        server: {
+            // PUBLIC KEY USED TO VERIFY TOKEN FROM AN EXTERNAL SERVICE
+            AUTH_PUBLIC_KEY: z.string(),
+            AUTH_CACHE_TTL_SEC: z.coerce.number().optional(),
+        },
 
-    runtimeEnv: process.env,
+        runtimeEnv: process.env,
 
-    // IMPORTANT: ensure only expected vars are exposed
-    skipValidation: false,
-});
+        // IMPORTANT: ensure only expected vars are exposed
+        skipValidation: false,
+    });
