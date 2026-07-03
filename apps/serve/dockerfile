@@ -35,9 +35,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/~ ./~
 
 COPY --from=deps /app/apps/serve/node_modules ./apps/serve/node_modules
-COPY --from=deps /app/apps/ingest/node_modules ./apps/ingest/node_modules
-COPY --from=deps /app/apps/transcode/node_modules ./apps/transcode/node_modules
 COPY --from=deps /app/packages ./packages
+
+# COPY --from=deps /app/apps/ingest/node_modules ./apps/ingest/node_modules
+# COPY --from=deps /app/apps/transcode/node_modules ./apps/transcode/node_modules
 
 COPY . .
 
@@ -63,8 +64,5 @@ COPY --from=build --chown=streamforge:streamforge /app/apps/serve/dist ./dist
 USER streamforge
 
 EXPOSE 3002
-
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
-  CMD wget -qO- http://localhost:3002/health || exit 1
 
 CMD ["bun", "run", "dist/index.js"]

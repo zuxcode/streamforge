@@ -34,8 +34,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/~ ./~
 
-COPY --from=deps /app/apps/serve/node_modules ./apps/serve/node_modules
-COPY --from=deps /app/apps/ingest/node_modules ./apps/ingest/node_modules
+# COPY --from=deps /app/apps/serve/node_modules ./apps/serve/node_modules
+# COPY --from=deps /app/apps/ingest/node_modules ./apps/ingest/node_modules
+
 COPY --from=deps /app/apps/transcode/node_modules ./apps/transcode/node_modules
 COPY --from=deps /app/packages ./packages
 
@@ -60,8 +61,11 @@ ENV NODE_ENV=production
 
 RUN addgroup -S streamforge && adduser -S -G streamforge streamforge
 
-# Writable temp directory for transcoding working files
-RUN mkdir -p /tmp/streamforge && chown streamforge:streamforge /tmp/streamforge
+# Writable temp directory for transcoding working files.
+# The app creates this via a relative "./tmp" mkdir call, which resolves to
+# /app/tmp given WORKDIR /app — must exist and be owned by the runtime user
+# before the app starts, since /app itself is root-owned by default.
+RUN mkdir -p /app/tmp && chown streamforge:streamforge /app/tmp
 
 COPY --from=build --chown=streamforge:streamforge /app/apps/transcode/dist ./dist
 

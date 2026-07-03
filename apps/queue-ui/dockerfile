@@ -53,7 +53,5 @@ USER streamforge
 
 # ASSUMPTION: QUEUE_UI_PORT=3003 — adjust to match your actual env config.
 EXPOSE 3030
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
-  CMD wget -qO- http://localhost:3030/health || exit 1
   
 CMD ["bun", "run", "dist/index.js"]
