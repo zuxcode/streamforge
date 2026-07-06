@@ -26,7 +26,9 @@ const origin = ingestEnv.SF_COR_ORIGIN === "*"
 
 app.use(honoLogger());
 app.use(trimTrailingSlash());
-app.use(csrf({ origin }));
+
+// CORS must run before CSRF so preflight (OPTIONS) requests are handled
+// before CSRF's origin check can reject them.
 app.use(
   "*",
   cors({
@@ -37,6 +39,14 @@ app.use(
     maxAge: 86400,
   }),
 );
+
+// NOTE: csrf() checks the Origin header, which is meaningful protection
+// against ambient-credential (cookie) attacks. This service authenticates
+// via Bearer/opaque tokens in headers, not cookies, so CSRF may not be
+// providing real protection here — worth confirming this is still needed.
+// If SF_COR_ORIGIN is "*", csrf() will accept any origin, which
+// significantly weakens it in production.
+app.use(csrf({ origin }));
 
 app.use("*", prettyJSON());
 app.use(poweredBy({ serverName: "StreamForge" }));
@@ -73,8 +83,8 @@ app.get("/health", (c) =>
 app.use("*", authMiddleware);
 
 /* =========================================================
-* Routes
-* ======================================================= */
+ * Routes
+ * ======================================================= */
 app.route("/", enqueueRoute);
 
 app.onError((err, c) => {
@@ -108,8 +118,7 @@ logger.info(
     url: `http://0.0.0.0:${ingestEnv.INGEST_PORT}`,
     routes: [
       "POST /enqueue        → Async (BullMQ)",
-      "GET /jobs/:id       → Job status",
-      "GET /health         → Health check",
+      "GET /health          → Health check",
     ],
     port: ingestEnv.INGEST_PORT,
     nodeEnv: ingestEnv.NODE_ENV,
@@ -123,8 +132,8 @@ logger.info(
  * ======================================================= */
 const shutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
-  await server.stop();
   try {
+    await server.stop();
     logger.debug("Closing resources...");
     await closeTranscodeQueue();
     logger.info("Shutdown complete");

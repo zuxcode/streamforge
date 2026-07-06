@@ -12,9 +12,10 @@ COPY package.json bun.lock* bunfig.toml  ./
 COPY apps/serve/package.json ./apps/serve/
 COPY apps/ingest/package.json ./apps/ingest/
 COPY apps/transcode/package.json ./apps/transcode/
-COPY apps/queue-ui/package.json ./apps/queue-ui/
 
 COPY packages/auth/package.json ./packages/auth/
+
+COPY packages/payload/package.json ./packages/payload/
 COPY packages/env/package.json ./packages/env/
 COPY packages/logger/package.json ./packages/logger/
 COPY packages/queue/package.json ./packages/queue/
@@ -22,7 +23,7 @@ COPY packages/storage/package.json ./packages/storage/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --prod
 
 # ---------------------------------------------------------------------------
 # Stage 2: build
@@ -33,9 +34,6 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/~ ./~
-
-# COPY --from=deps /app/apps/serve/node_modules ./apps/serve/node_modules
-# COPY --from=deps /app/apps/transcode/node_modules ./apps/transcode/node_modules
 
 COPY --from=deps /app/apps/ingest/node_modules ./apps/ingest/node_modules
 COPY --from=deps /app/packages ./packages

@@ -12,7 +12,6 @@ COPY package.json bun.lock* bunfig.toml  ./
 COPY apps/serve/package.json ./apps/serve/
 COPY apps/ingest/package.json ./apps/ingest/
 COPY apps/transcode/package.json ./apps/transcode/
-COPY apps/queue-ui/package.json ./apps/queue-ui/
 
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/env/package.json ./packages/env/
