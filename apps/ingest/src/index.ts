@@ -10,27 +10,15 @@ import { csrf } from "hono/csrf";
 
 import { createLogger } from "@streamforge/logger";
 import { ingestEnv as env } from "@streamforge/env";
-import { createAuthMiddleware } from "@streamforge/auth";
 import { closeTranscodeQueue, getTranscodeQueue } from "@streamforge/queue";
 import { enqueueRoute } from "./routes/enqueue";
+import { authMiddleware } from "./middleware/auth.middleware";
 
 const ingestEnv = env();
 getTranscodeQueue(ingestEnv.SF_REDIS_URL);
 
 const app = new Hono();
 const logger = createLogger("ingest:main-service");
-
-// ---------------------------------------------------------------------------
-// Auth middleware
-//
-// Enqueueing a transcode job is not free — it costs Redis/queue capacity and
-// eventually real transcode compute. Anyone who can reach POST /enqueue can
-// force work onto the pipeline, so it's gated the same way `serve` gates
-// stream access.
-// ---------------------------------------------------------------------------
-const authMiddleware = createAuthMiddleware({
-  publicKey: ingestEnv.AUTH_PUBLIC_KEY,
-});
 
 const origin = ingestEnv.SF_COR_ORIGIN === "*"
   ? "*"

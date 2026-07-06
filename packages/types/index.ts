@@ -1,3 +1,5 @@
+import { User } from "./payload-types";
+
 export * from "./payload-types";
 
 // ---------------------------------------------------------------------------
@@ -147,18 +149,18 @@ export type UserRole = "admin" | "user";
  * This is not a JWT payload — it is the normalised response from calling the
  * external auth provider (Auth0, Clerk, etc.) with an opaque access token.
  */
-export interface AuthenticatedUser {
+export interface AuthenticatedUser extends User {
   /** The user's unique ID as assigned by the auth provider. */
-  id: string;
+  // id: string;
 
-  /** Human-readable identifier (email or username). */
-  email: string;
+  // /** Human-readable identifier (email or username). */
+  // email: string;
 
-  /** The user's assigned role. */
-  role: UserRole;
+  // /** The user's assigned role. */
+  // role: UserRole;
 
-  /** Current subscription status. */
-  subscription: SubscriptionStatus;
+  // /** Current subscription status. */
+  // subscription: SubscriptionStatus;
 }
 
 

@@ -10,7 +10,6 @@ import { ingestEnv as env } from "@streamforge/env";
 import { getTranscodeQueue } from "@streamforge/queue/queue-client";
 import { uploadPayloadSchema } from "../handlers/schema.zod";
 import { createLogger } from "@streamforge/logger";
-import { createAuthMiddleware } from "@streamforge/auth";
 import {
   createStorageClient,
   s3Keys,
@@ -22,7 +21,6 @@ const logger = createLogger("ingest:enqueue-route");
 
 const ingestEnv = env();
 
-const ROUTE_PATH = "/";
 
 const storage = createStorageClient({
   bucket: ingestEnv.SF_S3_BUCKET,
@@ -32,18 +30,6 @@ const storage = createStorageClient({
   endpoint: ingestEnv.SF_S3_ENDPOINT,
 });
 
-// ---------------------------------------------------------------------------
-// Auth middleware
-//
-// Created once at startup. The introspection cache is shared across all
-// requests for the lifetime of this process.
-// ---------------------------------------------------------------------------
-
-const authMiddleware = createAuthMiddleware({
-  publicKey: ingestEnv.AUTH_PUBLIC_KEY,
-});
-
-enqueueRoute.use(ROUTE_PATH, authMiddleware);
 
 /* =========================================================
  * Route: POST /enqueue
