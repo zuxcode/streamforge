@@ -3,7 +3,7 @@ import { payloadEnv } from "../env";
 import type { Config } from "../types";
 
 type StrategyKey = "apiKey" | "token";
-type StrategyValue = "API-Key" | "Bearer";
+type StrategyValue = "users API-Key" | "Bearer";
 
 type StrategyMap = {
     [key in StrategyKey]: StrategyValue;
@@ -18,7 +18,7 @@ export function payloadClient(
     { token, strategy = "token" }: PayloadClientOptions,
 ) {
     const strategyType = {
-        apiKey: "API-Key",
+        apiKey: "users API-Key",
         token: "Bearer",
     } satisfies StrategyMap;
 
