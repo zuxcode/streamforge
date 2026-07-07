@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const storageEnv = () =>
   createEnv({
@@ -9,7 +9,7 @@ export const storageEnv = () =>
       SF_S3_ACCESS_KEY_ID: z.string().min(1),
       SF_S3_SECRET_ACCESS_KEY: z.string().min(1),
       SF_S3_ENDPOINT: z.url().optional(),
-      SF_S3_OUT_DIR: z.string().default("hsl").optional(),
+      SF_S3_OUT_DIR: z.string().default('hsl').optional(),
     },
 
     runtimeEnv: process.env,
