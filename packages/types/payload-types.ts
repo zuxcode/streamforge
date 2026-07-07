@@ -13,53 +13,53 @@
  * via the `definition` "supportedTimezones".
  */
 export type SupportedTimezones =
-  | 'Pacific/Midway'
-  | 'Pacific/Niue'
-  | 'Pacific/Honolulu'
-  | 'Pacific/Rarotonga'
-  | 'America/Anchorage'
-  | 'Pacific/Gambier'
-  | 'America/Los_Angeles'
-  | 'America/Tijuana'
-  | 'America/Denver'
-  | 'America/Phoenix'
-  | 'America/Chicago'
-  | 'America/Guatemala'
-  | 'America/New_York'
-  | 'America/Bogota'
-  | 'America/Caracas'
-  | 'America/Santiago'
-  | 'America/Buenos_Aires'
-  | 'America/Sao_Paulo'
-  | 'Atlantic/South_Georgia'
-  | 'Atlantic/Azores'
-  | 'Atlantic/Cape_Verde'
-  | 'Europe/London'
-  | 'Europe/Berlin'
-  | 'Africa/Lagos'
-  | 'Europe/Athens'
-  | 'Africa/Cairo'
-  | 'Europe/Moscow'
-  | 'Asia/Riyadh'
-  | 'Asia/Dubai'
-  | 'Asia/Baku'
-  | 'Asia/Karachi'
-  | 'Asia/Tashkent'
-  | 'Asia/Calcutta'
-  | 'Asia/Dhaka'
-  | 'Asia/Almaty'
-  | 'Asia/Jakarta'
-  | 'Asia/Bangkok'
-  | 'Asia/Shanghai'
-  | 'Asia/Singapore'
-  | 'Asia/Tokyo'
-  | 'Asia/Seoul'
-  | 'Australia/Brisbane'
-  | 'Australia/Sydney'
-  | 'Pacific/Guam'
-  | 'Pacific/Noumea'
-  | 'Pacific/Auckland'
-  | 'Pacific/Fiji';
+  | "Pacific/Midway"
+  | "Pacific/Niue"
+  | "Pacific/Honolulu"
+  | "Pacific/Rarotonga"
+  | "America/Anchorage"
+  | "Pacific/Gambier"
+  | "America/Los_Angeles"
+  | "America/Tijuana"
+  | "America/Denver"
+  | "America/Phoenix"
+  | "America/Chicago"
+  | "America/Guatemala"
+  | "America/New_York"
+  | "America/Bogota"
+  | "America/Caracas"
+  | "America/Santiago"
+  | "America/Buenos_Aires"
+  | "America/Sao_Paulo"
+  | "Atlantic/South_Georgia"
+  | "Atlantic/Azores"
+  | "Atlantic/Cape_Verde"
+  | "Europe/London"
+  | "Europe/Berlin"
+  | "Africa/Lagos"
+  | "Europe/Athens"
+  | "Africa/Cairo"
+  | "Europe/Moscow"
+  | "Asia/Riyadh"
+  | "Asia/Dubai"
+  | "Asia/Baku"
+  | "Asia/Karachi"
+  | "Asia/Tashkent"
+  | "Asia/Calcutta"
+  | "Asia/Dhaka"
+  | "Asia/Almaty"
+  | "Asia/Jakarta"
+  | "Asia/Bangkok"
+  | "Asia/Shanghai"
+  | "Asia/Singapore"
+  | "Asia/Tokyo"
+  | "Asia/Seoul"
+  | "Australia/Brisbane"
+  | "Australia/Sydney"
+  | "Pacific/Guam"
+  | "Pacific/Noumea"
+  | "Pacific/Auckland"
+  | "Pacific/Fiji";
 
 export interface Config {
   auth: {
@@ -67,44 +67,49 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    'signal-pricing': SignalPricing;
+    "signal-pricing": SignalPricing;
     users: User;
     media: Media;
     lessons: Lesson;
     modules: Module;
     courses: Course;
     enrollments: Enrollment;
-    'telegram-groups': TelegramGroup;
+    "telegram-groups": TelegramGroup;
     transactions: Transaction;
     notifications: Notification;
-    'lesson-progress': LessonProgress;
-    'module-progress': ModuleProgress;
-    'payload-kv': PayloadKv;
-    'payload-jobs': PayloadJob;
-    'payload-locked-documents': PayloadLockedDocument;
-    'payload-preferences': PayloadPreference;
-    'payload-migrations': PayloadMigration;
+    "lesson-progress": LessonProgress;
+    "module-progress": ModuleProgress;
+    "payload-kv": PayloadKv;
+    "payload-jobs": PayloadJob;
+    "payload-locked-documents": PayloadLockedDocument;
+    "payload-preferences": PayloadPreference;
+    "payload-migrations": PayloadMigration;
   };
   collectionsJoins: {};
   collectionsSelect: {
-    'signal-pricing': SignalPricingSelect<false> | SignalPricingSelect<true>;
+    "signal-pricing": SignalPricingSelect<false> | SignalPricingSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     lessons: LessonsSelect<false> | LessonsSelect<true>;
     modules: ModulesSelect<false> | ModulesSelect<true>;
     courses: CoursesSelect<false> | CoursesSelect<true>;
     enrollments: EnrollmentsSelect<false> | EnrollmentsSelect<true>;
-    'telegram-groups': TelegramGroupsSelect<false> | TelegramGroupsSelect<true>;
+    "telegram-groups": TelegramGroupsSelect<false> | TelegramGroupsSelect<true>;
     transactions: TransactionsSelect<false> | TransactionsSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
-    'lesson-progress': LessonProgressSelect<false> | LessonProgressSelect<true>;
-    'module-progress': ModuleProgressSelect<false> | ModuleProgressSelect<true>;
-    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
-    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
-    'payload-locked-documents':
-      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
-    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
-    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
+    "lesson-progress": LessonProgressSelect<false> | LessonProgressSelect<true>;
+    "module-progress": ModuleProgressSelect<false> | ModuleProgressSelect<true>;
+    "payload-kv": PayloadKvSelect<false> | PayloadKvSelect<true>;
+    "payload-jobs": PayloadJobsSelect<false> | PayloadJobsSelect<true>;
+    "payload-locked-documents":
+      | PayloadLockedDocumentsSelect<false>
+      | PayloadLockedDocumentsSelect<true>;
+    "payload-preferences":
+      | PayloadPreferencesSelect<false>
+      | PayloadPreferencesSelect<true>;
+    "payload-migrations":
+      | PayloadMigrationsSelect<false>
+      | PayloadMigrationsSelect<true>;
   };
   db: {
     defaultIDType: number;
@@ -112,13 +117,17 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     about: About;
-    'currency-exchange-rate': CurrencyExchangeRate;
-    'payload-jobs-stats': PayloadJobsStat;
+    "currency-exchange-rate": CurrencyExchangeRate;
+    "payload-jobs-stats": PayloadJobsStat;
   };
   globalsSelect: {
     about: AboutSelect<false> | AboutSelect<true>;
-    'currency-exchange-rate': CurrencyExchangeRateSelect<false> | CurrencyExchangeRateSelect<true>;
-    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
+    "currency-exchange-rate":
+      | CurrencyExchangeRateSelect<false>
+      | CurrencyExchangeRateSelect<true>;
+    "payload-jobs-stats":
+      | PayloadJobsStatsSelect<false>
+      | PayloadJobsStatsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -129,7 +138,7 @@ export interface Config {
     tasks: {
       sendWelcomeEmail: TaskSendWelcomeEmail;
       sendPromotionalWelcomeEmail: TaskSendPromotionalWelcomeEmail;
-      'cleanup-notification': TaskCleanupNotification;
+      "cleanup-notification": TaskCleanupNotification;
       sendTelegramLink: TaskSendTelegramLink;
       enqueueVideo: TaskEnqueueVideo;
       inline: {
@@ -189,11 +198,11 @@ export interface SignalPricing {
   /**
    * Currency code (default USD)
    */
-  currency: 'NGN' | 'USD';
+  currency: "NGN" | "USD";
   /**
    * Display text, e.g., "Per Month", "Per Quarterly", "Per Semi Annual"
    */
-  period: '/month' | '/3 months' | '/6 semiannual' | '/12 Annual' | '/lifetime';
+  period: "/month" | "/3 months" | "/6 semiannual" | "/12 Annual" | "/lifetime";
   /**
    * Highlight this tier with "Most Popular" badge (only one recommended)
    */
@@ -204,9 +213,9 @@ export interface SignalPricing {
   sortOrder?: number | null;
   features?:
     | {
-        text: string;
-        id?: string | null;
-      }[]
+      text: string;
+      id?: string | null;
+    }[]
     | null;
   /**
    * Button text, e.g., "Get Quarterly (Most Popular)"
@@ -227,7 +236,7 @@ export interface User {
   id: number;
   first_name: string;
   last_name?: string | null;
-  role?: ('admin' | 'customer' | 'bot') | null;
+  role?: ("admin" | "customer" | "bot") | null;
   phone?: string | null;
   avatar?: (number | null) | Media;
   plan?: (number | null) | SignalPricing;
@@ -247,13 +256,13 @@ export interface User {
   lockUntil?: string | null;
   sessions?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
+      id: string;
+      createdAt?: string | null;
+      expiresAt: string;
+    }[]
     | null;
   password?: string | null;
-  collection: 'users';
+  collection: "users";
 }
 /**
  * Central media library. Public files are visible to everyone. Private files are restricted.
@@ -266,11 +275,11 @@ export interface Media {
   /**
    * Public = visible on listings & to everyone. Private = restricted.
    */
-  type: 'public' | 'private' | 'paid';
+  type: "public" | "private" | "paid";
   /**
    * Tracks media processing/transcoding lifecycle.
    */
-  processingStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  processingStatus: "pending" | "processing" | "completed" | "failed";
   uploadedBy: number | User;
   updatedBy?: (number | null) | User;
   /**
@@ -395,7 +404,7 @@ export interface Course {
   /**
    * Currency code (default: USD)
    */
-  currency: 'NGN' | 'USD';
+  currency: "NGN" | "USD";
   thumbnail: number | Media;
   /**
    * If enabled, users must complete all lessons in a section before accessing the next.
@@ -427,7 +436,7 @@ export interface Enrollment {
   userEmail?: string | null;
   courseTitle?: string | null;
   enrolledAt: string;
-  status: 'enrolled' | 'in-progress' | 'completed';
+  status: "enrolled" | "in-progress" | "completed";
   progress?: number | null;
   /**
    * Total hours watched (decimal). Auto-calculated from lesson watch time.
@@ -470,7 +479,7 @@ export interface Transaction {
   /**
    * Determines which product was purchased
    */
-  type: 'course' | 'signal-plan';
+  type: "course" | "signal-plan";
   /**
    * The course that was purchased (lifetime access)
    */
@@ -485,16 +494,18 @@ export interface Transaction {
   invitationSent?: boolean | null;
   amount: number;
   currency: string;
-  paymentMethod: 'korapay' | 'nowpayments';
-  status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'cancelled';
+  paymentMethod: "korapay" | "nowpayments";
+  status: "pending" | "succeeded" | "failed" | "refunded" | "cancelled";
   isRecurring?: boolean | null;
-  billingInterval?: ('/month' | '/3 months' | '/6 semiannual' | '/12 Annual' | '/lifetime') | null;
+  billingInterval?:
+    | ("/month" | "/3 months" | "/6 semiannual" | "/12 Annual" | "/lifetime")
+    | null;
   nextBillingDate?: string | null;
   paymentDate?: string | null;
   metadata?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -512,7 +523,13 @@ export interface Transaction {
 export interface Notification {
   id: number;
   user: number | User;
-  type: 'signal' | 'course' | 'community' | 'billing' | 'announcement' | 'achievement';
+  type:
+    | "signal"
+    | "course"
+    | "community"
+    | "billing"
+    | "announcement"
+    | "achievement";
   title: string;
   message: string;
   /**
@@ -526,8 +543,8 @@ export interface Notification {
   readAt?: string | null;
   metadata?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -548,7 +565,7 @@ export interface LessonProgress {
   moduleProgress: number | ModuleProgress;
   lesson: number | Lesson;
   watchedSeconds?: number | null;
-  status: 'in-progress' | 'completed';
+  status: "in-progress" | "completed";
   lastWatchedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -565,7 +582,7 @@ export interface ModuleProgress {
   enrollment: number | Enrollment;
   module: number | Module;
   watchedSeconds?: number | null;
-  status: 'in-progress' | 'completed';
+  status: "in-progress" | "completed";
   lastWatchedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -579,8 +596,8 @@ export interface PayloadKv {
   key: string;
   data:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -598,8 +615,8 @@ export interface PayloadJob {
    */
   input?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -607,8 +624,8 @@ export interface PayloadJob {
     | null;
   taskStatus?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -625,8 +642,8 @@ export interface PayloadJob {
    */
   error?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -637,64 +654,64 @@ export interface PayloadJob {
    */
   log?:
     | {
-        executedAt: string;
-        completedAt: string;
-        taskSlug:
-          | 'inline'
-          | 'sendWelcomeEmail'
-          | 'sendPromotionalWelcomeEmail'
-          | 'cleanup-notification'
-          | 'sendTelegramLink'
-          | 'enqueueVideo';
-        taskID: string;
-        input?:
-          | {
-              [k: string]: unknown;
-            }
-          | unknown[]
-          | string
-          | number
-          | boolean
-          | null;
-        output?:
-          | {
-              [k: string]: unknown;
-            }
-          | unknown[]
-          | string
-          | number
-          | boolean
-          | null;
-        state: 'failed' | 'succeeded';
-        error?:
-          | {
-              [k: string]: unknown;
-            }
-          | unknown[]
-          | string
-          | number
-          | boolean
-          | null;
-        id?: string | null;
-      }[]
+      executedAt: string;
+      completedAt: string;
+      taskSlug:
+        | "inline"
+        | "sendWelcomeEmail"
+        | "sendPromotionalWelcomeEmail"
+        | "cleanup-notification"
+        | "sendTelegramLink"
+        | "enqueueVideo";
+      taskID: string;
+      input?:
+        | {
+          [k: string]: unknown;
+        }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      output?:
+        | {
+          [k: string]: unknown;
+        }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      state: "failed" | "succeeded";
+      error?:
+        | {
+          [k: string]: unknown;
+        }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      id?: string | null;
+    }[]
     | null;
   taskSlug?:
     | (
-        | 'inline'
-        | 'sendWelcomeEmail'
-        | 'sendPromotionalWelcomeEmail'
-        | 'cleanup-notification'
-        | 'sendTelegramLink'
-        | 'enqueueVideo'
-      )
+      | "inline"
+      | "sendWelcomeEmail"
+      | "sendPromotionalWelcomeEmail"
+      | "cleanup-notification"
+      | "sendTelegramLink"
+      | "enqueueVideo"
+    )
     | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
   meta?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -711,56 +728,56 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'signal-pricing';
-        value: number | SignalPricing;
-      } | null)
+      relationTo: "signal-pricing";
+      value: number | SignalPricing;
+    } | null)
     | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
+      relationTo: "users";
+      value: number | User;
+    } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
-      } | null)
+      relationTo: "media";
+      value: number | Media;
+    } | null)
     | ({
-        relationTo: 'lessons';
-        value: number | Lesson;
-      } | null)
+      relationTo: "lessons";
+      value: number | Lesson;
+    } | null)
     | ({
-        relationTo: 'modules';
-        value: number | Module;
-      } | null)
+      relationTo: "modules";
+      value: number | Module;
+    } | null)
     | ({
-        relationTo: 'courses';
-        value: number | Course;
-      } | null)
+      relationTo: "courses";
+      value: number | Course;
+    } | null)
     | ({
-        relationTo: 'enrollments';
-        value: number | Enrollment;
-      } | null)
+      relationTo: "enrollments";
+      value: number | Enrollment;
+    } | null)
     | ({
-        relationTo: 'telegram-groups';
-        value: number | TelegramGroup;
-      } | null)
+      relationTo: "telegram-groups";
+      value: number | TelegramGroup;
+    } | null)
     | ({
-        relationTo: 'transactions';
-        value: number | Transaction;
-      } | null)
+      relationTo: "transactions";
+      value: number | Transaction;
+    } | null)
     | ({
-        relationTo: 'notifications';
-        value: number | Notification;
-      } | null)
+      relationTo: "notifications";
+      value: number | Notification;
+    } | null)
     | ({
-        relationTo: 'lesson-progress';
-        value: number | LessonProgress;
-      } | null)
+      relationTo: "lesson-progress";
+      value: number | LessonProgress;
+    } | null)
     | ({
-        relationTo: 'module-progress';
-        value: number | ModuleProgress;
-      } | null);
+      relationTo: "module-progress";
+      value: number | ModuleProgress;
+    } | null);
   globalSlug?: string | null;
   user: {
-    relationTo: 'users';
+    relationTo: "users";
     value: number | User;
   };
   updatedAt: string;
@@ -773,14 +790,14 @@ export interface PayloadLockedDocument {
 export interface PayloadPreference {
   id: number;
   user: {
-    relationTo: 'users';
+    relationTo: "users";
     value: number | User;
   };
   key?: string | null;
   value?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -817,9 +834,9 @@ export interface SignalPricingSelect<T extends boolean = true> {
   features?:
     | T
     | {
-        text?: T;
-        id?: T;
-      };
+      text?: T;
+      id?: T;
+    };
   cta?: T;
   active?: T;
   updatedAt?: T;
@@ -853,10 +870,10 @@ export interface UsersSelect<T extends boolean = true> {
   sessions?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
+      id?: T;
+      createdAt?: T;
+      expiresAt?: T;
+    };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -886,37 +903,37 @@ export interface MediaSelect<T extends boolean = true> {
   sizes?:
     | T
     | {
-        thumbnail?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        card?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        large?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-      };
+      thumbnail?:
+        | T
+        | {
+          url?: T;
+          width?: T;
+          height?: T;
+          mimeType?: T;
+          filesize?: T;
+          filename?: T;
+        };
+      card?:
+        | T
+        | {
+          url?: T;
+          width?: T;
+          height?: T;
+          mimeType?: T;
+          filesize?: T;
+          filename?: T;
+        };
+      large?:
+        | T
+        | {
+          url?: T;
+          width?: T;
+          height?: T;
+          mimeType?: T;
+          filesize?: T;
+          filename?: T;
+        };
+    };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -969,10 +986,10 @@ export interface CoursesSelect<T extends boolean = true> {
   meta?:
     | T
     | {
-        title?: T;
-        description?: T;
-        image?: T;
-      };
+      title?: T;
+      description?: T;
+      image?: T;
+    };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1092,16 +1109,16 @@ export interface PayloadJobsSelect<T extends boolean = true> {
   log?:
     | T
     | {
-        executedAt?: T;
-        completedAt?: T;
-        taskSlug?: T;
-        taskID?: T;
-        input?: T;
-        output?: T;
-        state?: T;
-        error?: T;
-        id?: T;
-      };
+      executedAt?: T;
+      completedAt?: T;
+      taskSlug?: T;
+      taskID?: T;
+      input?: T;
+      output?: T;
+      state?: T;
+      error?: T;
+      id?: T;
+    };
   taskSlug?: T;
   queue?: T;
   waitUntil?: T;
@@ -1162,8 +1179,8 @@ export interface About {
         version: number;
         [k: string]: unknown;
       }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      direction: ("ltr" | "rtl") | null;
+      format: "left" | "start" | "center" | "right" | "end" | "justify" | "";
       indent: number;
       version: number;
     };
@@ -1177,8 +1194,8 @@ export interface About {
         version: number;
         [k: string]: unknown;
       }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      direction: ("ltr" | "rtl") | null;
+      format: "left" | "start" | "center" | "right" | "end" | "justify" | "";
       indent: number;
       version: number;
     };
@@ -1186,19 +1203,19 @@ export interface About {
   } | null;
   team?:
     | {
-        name: string;
-        role: string;
-        bio?: string | null;
-        image?: (number | null) | Media;
-        socialLinks?:
-          | {
-              platform?: string | null;
-              url?: string | null;
-              id?: string | null;
-            }[]
-          | null;
-        id?: string | null;
-      }[]
+      name: string;
+      role: string;
+      bio?: string | null;
+      image?: (number | null) | Media;
+      socialLinks?:
+        | {
+          platform?: string | null;
+          url?: string | null;
+          id?: string | null;
+        }[]
+        | null;
+      id?: string | null;
+    }[]
     | null;
   cta?: {
     text?: string | null;
@@ -1238,7 +1255,7 @@ export interface CurrencyExchangeRate {
   exchangeRate: number;
   lastUpdated?: string | null;
   updatedBy?: (number | null) | User;
-  source?: ('manual' | 'korapay' | 'nowpayments' | 'external' | 'bank') | null;
+  source?: ("manual" | "korapay" | "nowpayments" | "external" | "bank") | null;
   /**
    * Why was this rate updated? (optional)
    */
@@ -1254,8 +1271,8 @@ export interface PayloadJobsStat {
   id: number;
   stats?:
     | {
-        [k: string]: unknown;
-      }
+      [k: string]: unknown;
+    }
     | unknown[]
     | string
     | number
@@ -1273,42 +1290,42 @@ export interface AboutSelect<T extends boolean = true> {
   hero?:
     | T
     | {
-        heading?: T;
-        subheading?: T;
-        image?: T;
-      };
+      heading?: T;
+      subheading?: T;
+      image?: T;
+    };
   mission?: T;
   vision?: T;
   team?:
     | T
     | {
-        name?: T;
-        role?: T;
-        bio?: T;
-        image?: T;
-        socialLinks?:
-          | T
-          | {
-              platform?: T;
-              url?: T;
-              id?: T;
-            };
-        id?: T;
-      };
+      name?: T;
+      role?: T;
+      bio?: T;
+      image?: T;
+      socialLinks?:
+        | T
+        | {
+          platform?: T;
+          url?: T;
+          id?: T;
+        };
+      id?: T;
+    };
   cta?:
     | T
     | {
-        text?: T;
-        buttonLabel?: T;
-        buttonLink?: T;
-      };
+      text?: T;
+      buttonLabel?: T;
+      buttonLink?: T;
+    };
   meta?:
     | T
     | {
-        title?: T;
-        description?: T;
-        image?: T;
-      };
+      title?: T;
+      description?: T;
+      image?: T;
+    };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1347,7 +1364,7 @@ export interface CollectionsWidget {
   data?: {
     [k: string]: unknown;
   };
-  width: 'full';
+  width: "full";
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1415,8 +1432,4 @@ export interface TaskEnqueueVideo {
  */
 export interface Auth {
   [k: string]: unknown;
-}
-
-declare module 'payload' {
-  export interface GeneratedTypes extends Config {}
 }

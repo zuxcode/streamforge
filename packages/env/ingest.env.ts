@@ -1,20 +1,19 @@
-import { createEnv } from '@t3-oss/env-core';
-import { z } from 'zod';
-import { sharedEnv } from './shared.env';
-import { authEnv } from './auth.env';
-import { storageEnv } from './storage.env';
+import { createEnv } from "@t3-oss/env-core";
+import { z } from "zod";
+import { sharedEnv } from "./shared.env";
+import { storageEnv } from "./storage.env";
+import { payloadEnv } from "./payload.env";
 
 const DEFAULT_MAX_UPLOAD_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 export const ingestEnv = () =>
   createEnv({
-    extends: [sharedEnv(), authEnv(), storageEnv()],
+    extends: [sharedEnv(), payloadEnv(), storageEnv()],
     server: {
-      // -----------------------------------------------------------------------------
-      // ingest service
-      // -----------------------------------------------------------------------------
       INGEST_PORT: z.coerce.number().default(3045),
-      INGEST_MAX_UPLOAD_SIZE: z.coerce.number().default(DEFAULT_MAX_UPLOAD_SIZE_BYTES),
+      INGEST_MAX_UPLOAD_SIZE: z.coerce.number().default(
+        DEFAULT_MAX_UPLOAD_SIZE_BYTES,
+      ),
     },
     runtimeEnv: process.env,
 

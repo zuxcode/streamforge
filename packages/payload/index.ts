@@ -1,6 +1,6 @@
 import { PayloadSDK } from '@payloadcms/sdk';
-import { payloadEnv } from '../env';
-import type { Config } from '../types';
+import { payloadEnv } from '@streamforge/env';
+import type { Config } from '@streamforge/types';
 
 type StrategyKey = 'apiKey' | 'token';
 type StrategyValue = 'users API-Key' | 'Bearer';

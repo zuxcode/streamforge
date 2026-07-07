@@ -13,8 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@payloadcms/sdk": "3.85.1",
-    "@streamforge/auth": "workspace:*",
+    "@streamforge/payload": "workspace:*",
     "@streamforge/env": "workspace:*",
     "@streamforge/logger": "workspace:*",
     "@streamforge/storage": "workspace:*",

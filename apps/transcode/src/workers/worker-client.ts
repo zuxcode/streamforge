@@ -10,13 +10,13 @@
 
 import { type Job, UnrecoverableError, Worker } from 'bullmq';
 import type IORedis from 'ioredis';
-import { createRedisConnection, logConnection, QUEUE_NAMES } from '@streamforge/queue/setup';
+import { createRedisConnection, logConnection, QUEUE_NAMES } from '@streamforge/queue';
 
 import type { FireWebhookPayload, onProgress, TranscodeJob } from '@streamforge/types';
 
 import { transcodeEnv as env } from '@streamforge/env';
 import { createLogger } from '@streamforge/logger';
-import { attachConnectionListeners } from '@streamforge/queue/utils';
+import { attachConnectionListeners } from '@streamforge/queue';
 import { processHls } from '../processors/hls-processor';
 import { classifyError } from '../utils/error-classifier';
 

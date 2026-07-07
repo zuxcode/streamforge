@@ -7,29 +7,14 @@ import { poweredBy } from 'hono/powered-by';
 import { prettyJSON } from 'hono/pretty-json';
 import { showRoutes } from 'hono/dev';
 import { csrf } from 'hono/csrf';
-
 import { createLogger } from '@streamforge/logger';
 import { serveEnv as env } from '@streamforge/env';
 import { streamRoute } from './routes/stream';
-import { createAuthMiddleware } from '@streamforge/auth';
+import { authMiddleware } from './middleware/auth.middleware';
 
 const serveEnv = env();
 const app = new Hono();
-
 const logger = createLogger('serve:Main');
-
-// ---------------------------------------------------------------------------
-// Auth middleware
-//
-// Created once at startup. The introspection cache is shared across all
-// requests — HLS players fetch dozens of segments in rapid succession so
-// the cache is critical: without it every segment request would hit the
-// auth service.
-// ---------------------------------------------------------------------------
-
-const authMiddleware = createAuthMiddleware({
-  publicKey: serveEnv.AUTH_PUBLIC_KEY,
-});
 
 /* =========================================================
  * CORS Config
@@ -42,7 +27,9 @@ const origin =
  * ======================================================= */
 app.use(honoLogger());
 app.use(trimTrailingSlash());
-app.use(csrf({ origin }));
+
+// CORS must run before CSRF so preflight (OPTIONS) requests are handled
+// before CSRF's origin check can reject them.
 app.use(
   '*',
   cors({
@@ -54,13 +41,19 @@ app.use(
   }),
 );
 
+// NOTE: this service authenticates via Bearer/opaque tokens in headers,
+// not cookies, so CSRF (which protects against ambient-credential/cookie
+// attacks) may not provide meaningful protection here — worth confirming
+// it's still needed. If SF_COR_ORIGIN is ever "*", csrf() will accept any
+// origin, which significantly weakens it in production.
+app.use(csrf({ origin }));
+
 app.use('*', prettyJSON());
 app.use(poweredBy({ serverName: 'StreamForge' }));
 app.use(secureHeaders());
 
 app.use('*', async (c, next) => {
   const start = Date.now();
-
   await next();
   logger.info(
     {
@@ -82,9 +75,10 @@ app.get('/health', (c) =>
   c.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime,
+    uptime: process.uptime(),
     runtime: 'bun',
     framework: 'hono',
+    service: 'StreamForge',
   }),
 );
 
@@ -100,7 +94,6 @@ app.route('/', streamRoute);
  * ======================================================= */
 app.onError((err, c) => {
   logger.error(err, 'Unhandled error');
-
   return c.json(
     {
       success: false,
@@ -116,7 +109,7 @@ app.notFound((c) => c.json({ error: { code: 'NOT_FOUND', message: 'Route not fou
  * Server Startup
  * ======================================================= */
 const server = Bun.serve({
-  port: 3002, //serveEnv.SERVE_PORT,
+  port: serveEnv.SERVE_PORT,
   fetch: app.fetch,
 });
 
@@ -135,12 +128,9 @@ logger.info(
  * ======================================================= */
 const shutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
-
-  await server.stop();
-
   try {
+    await server.stop();
     logger.debug('Closing resources...');
-
     logger.info('Shutdown complete');
     process.exit(0);
   } catch (err) {

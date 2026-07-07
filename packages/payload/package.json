@@ -3,14 +3,18 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "index.ts",
-  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "types": "./index.ts",
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@payloadcms/sdk": "3.85.1"
+    "@payloadcms/sdk": "3.85.1",
+    "@streamforge/env": "workspace:*",
+    "@streamforge/types": "workspace:*"
   }
 }

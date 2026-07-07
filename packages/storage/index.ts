@@ -113,7 +113,7 @@ export const s3Keys = {
 
 export interface UploadOptions {
   /** MIME type written as the S3 object's Content-Type metadata. */
-  contentType?: string;
+  contentType?: string | undefined;
 }
 
 export interface DownloadOptions {

@@ -2,12 +2,11 @@ import { Hono } from 'hono';
 import { v7 as uuidV7 } from 'uuid';
 import { zValidator } from '@hono/zod-validator';
 
-import { enqueueTranscodeJob, getQueueDepth } from '@streamforge/queue';
+import { enqueueTranscodeJob, getQueueDepth, getTranscodeQueue } from '@streamforge/queue';
 
 import type { ErrorResponse, UploadAcceptedResponse } from '@streamforge/types';
 
 import { ingestEnv as env } from '@streamforge/env';
-import { getTranscodeQueue } from '@streamforge/queue/queue-client';
 import { uploadPayloadSchema } from '../handlers/schema.zod';
 import { createLogger } from '@streamforge/logger';
 import { createStorageClient, s3Keys, StorageKeyNotFoundError } from '@streamforge/storage';

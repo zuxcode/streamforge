@@ -4,8 +4,8 @@
 // Manages per-job temporary working directories for ffmpeg pipelines.
 // Each job gets isolated storage to prevent concurrency collisions.
 // ---------------------------------------------------------------------------
-import { mkdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, rm } from "node:fs/promises";
+import { dirname, join } from "node:path";
 
 /* =========================================================
  * Types
@@ -48,7 +48,10 @@ export async function createJobTmpDir({
  * Removes a job's temp directory safely.
  * Never throws — cleanup failure is non-fatal.
  */
-export async function cleanupJobTmpDir(baseTmpDir: string, jobId: string): Promise<void> {
+export async function cleanupJobTmpDir(
+  baseTmpDir: string,
+  jobId: string,
+): Promise<void> {
   const dir = join(baseTmpDir, jobId);
   try {
     await rm(dir, { recursive: true, force: true });
@@ -71,8 +74,10 @@ export async function cleanupJobTmpDir(baseTmpDir: string, jobId: string): Promi
  * to avoid being uploaded as if they were `.ts` segments.
  */
 export async function listSegmentFiles(jobTmpDir: string): Promise<string[]> {
-  const glob = new Bun.Glob('**/*.ts');
-  const files = await Array.fromAsync(glob.scan({ cwd: jobTmpDir, onlyFiles: true }));
+  const glob = new Bun.Glob("**/*.ts");
+  const files = await Array.fromAsync(
+    glob.scan({ cwd: jobTmpDir, onlyFiles: true }),
+  );
 
   return files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
@@ -87,11 +92,14 @@ export async function listSegmentFiles(jobTmpDir: string): Promise<string[]> {
 export async function listRenditionManifestFiles(
   jobTmpDir: string,
 ): Promise<Array<{ relativePath: string; rendition: string }>> {
-  const glob = new Bun.Glob('*/index.m3u8');
-  const files = await Array.fromAsync(glob.scan({ cwd: jobTmpDir, onlyFiles: true }));
+  const glob = new Bun.Glob("*/index.m3u8");
+  const files = await Array.fromAsync(
+    glob.scan({ cwd: jobTmpDir, onlyFiles: true }),
+  );
 
   return files.map((relativePath) => {
-    const [rendition] = relativePath.split('/');
+    // const [rendition] = relativePath.split("/");
+    const rendition = dirname(relativePath);
     return { relativePath, rendition };
   });
 }

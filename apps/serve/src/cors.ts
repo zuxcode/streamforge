@@ -68,7 +68,7 @@ function isAllowedOrigin(origin: string, allowedOrigins: string[]): boolean {
 export function corsMiddleware(options: CorsOptions) {
   const { origins } = options;
 
-  return async function cors(c: Context, next: Next): Promise<Response | undefined> {
+  return async function cors(c: Context, next: Next): Promise<Response | void> {
     const requestOrigin = c.req.header('origin');
 
     let allowOrigin: string | null = null;
