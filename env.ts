@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const env = createEnv({
   server: {
@@ -10,13 +10,12 @@ export const env = createEnv({
 
     // BULLMQ
     WORKER_CONCURRENCY: z.coerce.number().default(2),
-    QUEUE_NAME: z.string().default("hls-pipeline"),
+    QUEUE_NAME: z.string().default('hls-pipeline'),
 
     // SYSTEM
     PORT: z.coerce.number().default(6060),
-    LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"])
-      .default("info"),
-    TMP_DOWNLOAD_DIR: z.string().default("./tmp"),
+    LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+    TMP_DOWNLOAD_DIR: z.string().default('./tmp'),
 
     // S3 Bucket
     S3_REGION: z.string(),

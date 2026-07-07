@@ -14,4 +14,3 @@ runs:
     - name: Install Dependencies
       run: bun install --frozen-lockfile
       shell: bash
-

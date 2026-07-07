@@ -6,11 +6,11 @@ A monorepo for video ingestion, transcoding, and adaptive streaming. Built with 
 
 ## Services
 
-| Service | Package | Responsibility |
-|---|---|---|
-| **ingest** | `apps/ingest` | Accepts video uploads, validates input, enqueues transcoding jobs |
-| **transcode** | `apps/transcode` | Consumes jobs from the queue, transcodes video to HLS format |
-| **serve** | `apps/serve` | Delivers `.m3u8` manifests and `.ts` segments to clients |
+| Service       | Package          | Responsibility                                                    |
+| ------------- | ---------------- | ----------------------------------------------------------------- |
+| **ingest**    | `apps/ingest`    | Accepts video uploads, validates input, enqueues transcoding jobs |
+| **transcode** | `apps/transcode` | Consumes jobs from the queue, transcodes video to HLS format      |
+| **serve**     | `apps/serve`     | Delivers `.m3u8` manifests and `.ts` segments to clients          |
 
 ---
 
@@ -131,32 +131,32 @@ All environment variables are validated at startup by `@streamforge/config`. Mis
 
 ### Shared
 
-| Variable | Description | Required |
-|---|---|---|
-| `SF_REDIS_URL` | Redis connection string | Yes |
-| `SF_S3_BUCKET` | S3 bucket name for video storage | Yes |
-| `SF_S3_REGION` | S3 region | Yes |
-| `SF_S3_ACCESS_KEY_ID` | S3 access key | Yes |
-| `SF_S3_SECRET_ACCESS_KEY` | S3 secret key | Yes |
+| Variable                  | Description                      | Required |
+| ------------------------- | -------------------------------- | -------- |
+| `SF_REDIS_URL`            | Redis connection string          | Yes      |
+| `SF_S3_BUCKET`            | S3 bucket name for video storage | Yes      |
+| `SF_S3_REGION`            | S3 region                        | Yes      |
+| `SF_S3_ACCESS_KEY_ID`     | S3 access key                    | Yes      |
+| `SF_S3_SECRET_ACCESS_KEY` | S3 secret key                    | Yes      |
 
 ### `ingest`
 
-| Variable | Description | Default |
-|---|---|---|
-| `INGEST_PORT` | HTTP port | `3000` |
+| Variable                 | Description                    | Default      |
+| ------------------------ | ------------------------------ | ------------ |
+| `INGEST_PORT`            | HTTP port                      | `3000`       |
 | `INGEST_MAX_UPLOAD_SIZE` | Max accepted file size (bytes) | `2147483648` |
 
 ### `transcode`
 
-| Variable | Description | Default |
-|---|---|---|
-| `TRANSCODE_CONCURRENCY` | Max concurrent transcoding jobs | `2` |
+| Variable                | Description                     | Default |
+| ----------------------- | ------------------------------- | ------- |
+| `TRANSCODE_CONCURRENCY` | Max concurrent transcoding jobs | `2`     |
 
 ### `serve`
 
-| Variable | Description | Default |
-|---|---|---|
-| `SERVE_PORT` | HTTP port | `3002` |
+| Variable          | Description                                  | Default |
+| ----------------- | -------------------------------------------- | ------- |
+| `SERVE_PORT`      | HTTP port                                    | `3002`  |
 | `SERVE_CACHE_TTL` | Cache-Control max-age for segments (seconds) | `86400` |
 
 ---
@@ -171,8 +171,8 @@ Accepts a video file upload and enqueues a transcoding job.
 
 **Request** — `multipart/form-data`
 
-| Field | Type | Description |
-|---|---|---|
+| Field  | Type | Description         |
+| ------ | ---- | ------------------- |
 | `file` | File | Video file (`.mp4`) |
 
 **Response** `202 Accepted`
@@ -245,15 +245,15 @@ docker compose -f infra/docker-compose.yml build
 
 ## Naming Conventions
 
-| Concern | Convention | Example |
-|---|---|---|
-| Files and folders | `kebab-case` | `hls-processor.ts`, `video-upload.ts` |
-| TypeScript classes and types | `PascalCase` | `TranscodeJob`, `HlsManifest` |
-| Environment variables (shared) | `SF_` prefix | `SF_REDIS_URL` |
-| Environment variables (service) | `SERVICE_` prefix | `INGEST_PORT` |
-| Internal packages | `@streamforge/<name>` | `@streamforge/queue` |
-| Docker images | `streamforge/<service>:<tag>` | `streamforge/serve:1.0.0` |
-| Exports from packages | Named exports only | `export { createJob }` |
+| Concern                         | Convention                    | Example                               |
+| ------------------------------- | ----------------------------- | ------------------------------------- |
+| Files and folders               | `kebab-case`                  | `hls-processor.ts`, `video-upload.ts` |
+| TypeScript classes and types    | `PascalCase`                  | `TranscodeJob`, `HlsManifest`         |
+| Environment variables (shared)  | `SF_` prefix                  | `SF_REDIS_URL`                        |
+| Environment variables (service) | `SERVICE_` prefix             | `INGEST_PORT`                         |
+| Internal packages               | `@streamforge/<name>`         | `@streamforge/queue`                  |
+| Docker images                   | `streamforge/<service>:<tag>` | `streamforge/serve:1.0.0`             |
+| Exports from packages           | Named exports only            | `export { createJob }`                |
 
 ---
 

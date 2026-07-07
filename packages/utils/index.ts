@@ -1,1 +1,1 @@
-export * from "./resolve-file";
+export * from './resolve-file';

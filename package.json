@@ -13,8 +13,8 @@
     "lint": "bun run --filter '*' lint",
     "lint:fix": "eslint . --fix",
     "typecheck": "bun run --filter '*' typecheck",
-    "prettier:check": "prettier --check .",
-    "prettier:write": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
     "clean": "./scripts/clean.sh"
   },
   "devDependencies": {

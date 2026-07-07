@@ -15,21 +15,21 @@
 //                                keepAlive, and BullMQ-required settings
 // ---------------------------------------------------------------------------
 
-import type { TranscodeJob } from "@streamforge/types";
-import { createLogger } from "@streamforge/logger";
-import { Queue } from "bullmq";
-import IORedis, { type Cluster, type Redis } from "ioredis";
+import type { TranscodeJob } from '@streamforge/types';
+import { createLogger } from '@streamforge/logger';
+import { Queue } from 'bullmq';
+import IORedis, { type Cluster, type Redis } from 'ioredis';
 
-const logger = createLogger("queue");
+const logger = createLogger('queue');
 
 export const logConnection = (name: string) => {
-    return {
-        connect: () => logger.info(`✅ ${name} connected to Redis`),
-        error: (err: Error) => logger.error(err, `❌ ${name} Redis error:`),
-        close: () => logger.warn(`⚠️ ${name} Redis connection closed`),
-        reconnecting: () => logger.info(`🔄 ${name} reconnecting to Redis...`),
-        connecting: () => logger.info(`🔄 ${name} connecting to Redis...`),
-    };
+  return {
+    connect: () => logger.info(`✅ ${name} connected to Redis`),
+    error: (err: Error) => logger.error(err, `❌ ${name} Redis error:`),
+    close: () => logger.warn(`⚠️ ${name} Redis connection closed`),
+    reconnecting: () => logger.info(`🔄 ${name} reconnecting to Redis...`),
+    connecting: () => logger.info(`🔄 ${name} connecting to Redis...`),
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -37,7 +37,7 @@ export const logConnection = (name: string) => {
 // ---------------------------------------------------------------------------
 
 export const QUEUE_NAMES = {
-    transcode: "transcode",
+  transcode: 'transcode',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -50,7 +50,7 @@ export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 // ---------------------------------------------------------------------------
 
 export const JOB_NAMES = {
-    transcode: "transcode:process",
+  transcode: 'transcode:process',
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -70,21 +70,21 @@ export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
 // ---------------------------------------------------------------------------
 
 export const JOB_OPTIONS = {
-    transcode: {
-        attempts: 5,
-        backoff: {
-            type: "exponential" as const,
-            delay: 5_000,
-        },
-        removeOnComplete: {
-            // Keep the most recent 500 completed jobs for observability
-            count: 500,
-        },
-        removeOnFail: {
-            // Keep the most recent 10 failed jobs for observability
-            count: 10,
-        },
+  transcode: {
+    attempts: 5,
+    backoff: {
+      type: 'exponential' as const,
+      delay: 5_000,
     },
+    removeOnComplete: {
+      // Keep the most recent 500 completed jobs for observability
+      count: 500,
+    },
+    removeOnFail: {
+      // Keep the most recent 10 failed jobs for observability
+      count: 10,
+    },
+  },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -99,35 +99,32 @@ export const JOB_OPTIONS = {
 //   enableOfflineQueue: false   — prevents commands piling up while offline
 // ---------------------------------------------------------------------------
 
-export function createRedisConnection(
-    redisUrl: string,
-    enableReadyCheck: boolean = true,
-): IORedis {
-    const url = new URL(redisUrl);
+export function createRedisConnection(redisUrl: string, enableReadyCheck: boolean = true): IORedis {
+  const url = new URL(redisUrl);
 
-    const connection = new IORedis({
-        host: url.hostname,
-        port: url.port ? parseInt(url.port, 10) : 6379,
-        // URL getters return percent-encoded credentials — decode before use,
-        // or passwords containing @ : / % etc. will fail auth silently.
-        // Empty strings in URL auth fields mean "not provided".
-        username: url.username ? decodeURIComponent(url.username) : undefined,
-        password: url.password ? decodeURIComponent(url.password) : undefined,
-        // Prevent idle connections being dropped by cloud Redis providers
-        keepAlive: 30_000,
-        // Required by BullMQ — it manages reconnection state itself
-        enableOfflineQueue: false,
-        maxRetriesPerRequest: null,
+  const connection = new IORedis({
+    host: url.hostname,
+    port: url.port ? parseInt(url.port, 10) : 6379,
+    // URL getters return percent-encoded credentials — decode before use,
+    // or passwords containing @ : / % etc. will fail auth silently.
+    // Empty strings in URL auth fields mean "not provided".
+    username: url.username ? decodeURIComponent(url.username) : undefined,
+    password: url.password ? decodeURIComponent(url.password) : undefined,
+    // Prevent idle connections being dropped by cloud Redis providers
+    keepAlive: 30_000,
+    // Required by BullMQ — it manages reconnection state itself
+    enableOfflineQueue: false,
+    maxRetriesPerRequest: null,
 
-        enableReadyCheck: enableReadyCheck, // Recommended for workers
+    enableReadyCheck: enableReadyCheck, // Recommended for workers
 
-        // Enable TLS for rediss:// (Redis over TLS, e.g. cloud-managed Redis)
-        tls: url.protocol === "rediss:" ? {} : undefined,
-    });
+    // Enable TLS for rediss:// (Redis over TLS, e.g. cloud-managed Redis)
+    tls: url.protocol === 'rediss:' ? {} : undefined,
+  });
 
-    logger.debug({ redisUrl }, "Created Redis connection");
+  logger.debug({ redisUrl }, 'Created Redis connection');
 
-    return connection;
+  return connection;
 }
 
 // ---------------------------------------------------------------------------
@@ -139,23 +136,24 @@ export function createRedisConnection(
 // directly — it does not need a Queue instance.
 // ---------------------------------------------------------------------------
 
-export function createTranscodeQueue(
-    connection: Redis | Cluster,
-): Queue<TranscodeJob> {
-    const queue = new Queue<TranscodeJob>(QUEUE_NAMES.transcode, {
-        connection,
-        // Apply retry/backoff/retention policy at the Queue level so individual
-        // add() calls don't need to repeat it. The jobId is NOT set here —
-        // it is unique per payload and passed per add() call in enqueueTranscodeJob.
-        defaultJobOptions: JOB_OPTIONS.transcode,
-    });
+export function createTranscodeQueue(connection: Redis | Cluster): Queue<TranscodeJob> {
+  const queue = new Queue<TranscodeJob>(QUEUE_NAMES.transcode, {
+    connection,
+    // Apply retry/backoff/retention policy at the Queue level so individual
+    // add() calls don't need to repeat it. The jobId is NOT set here —
+    // it is unique per payload and passed per add() call in enqueueTranscodeJob.
+    defaultJobOptions: JOB_OPTIONS.transcode,
+  });
 
-    logger.debug({
-        name: QUEUE_NAMES.transcode,
-        config: JOB_OPTIONS.transcode,
-    }, "Created Bullmq Queue");
+  logger.debug(
+    {
+      name: QUEUE_NAMES.transcode,
+      config: JOB_OPTIONS.transcode,
+    },
+    'Created Bullmq Queue',
+  );
 
-    return queue;
+  return queue;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,21 +161,21 @@ export function createTranscodeQueue(
 // ---------------------------------------------------------------------------
 
 export interface EnqueueResult {
-    /** The jobId that was enqueued or already existed (deduplicated). */
-    jobId: string;
+  /** The jobId that was enqueued or already existed (deduplicated). */
+  jobId: string;
 
-    /** The queue the job was sent to. */
-    queueName: QueueName;
+  /** The queue the job was sent to. */
+  queueName: QueueName;
 
-    /**
-     * True when a job with this jobId already existed in a non-terminal
-     * state (waiting, active, or delayed) before this call, so BullMQ
-     * returned the existing job rather than creating a new one.
-     *
-     * The upload handler uses this to distinguish "enqueued" from "already queued"
-     * in log output. Both outcomes are safe — the video will be transcoded exactly once.
-     */
-    deduplicated: boolean;
+  /**
+   * True when a job with this jobId already existed in a non-terminal
+   * state (waiting, active, or delayed) before this call, so BullMQ
+   * returned the existing job rather than creating a new one.
+   *
+   * The upload handler uses this to distinguish "enqueued" from "already queued"
+   * in log output. Both outcomes are safe — the video will be transcoded exactly once.
+   */
+  deduplicated: boolean;
 }
 
 /**
@@ -197,31 +195,34 @@ export interface EnqueueResult {
  *         other than deduplication (which is not an error).
  */
 export async function enqueueTranscodeJob(
-    queue: Queue<TranscodeJob>,
-    payload: TranscodeJob,
+  queue: Queue<TranscodeJob>,
+  payload: TranscodeJob,
 ): Promise<EnqueueResult> {
-    const existing = await queue.getJob(payload.jobId);
-    const deduplicated = existing !== undefined;
+  const existing = await queue.getJob(payload.jobId);
+  const deduplicated = existing !== undefined;
 
-    const job = await queue.add(JOB_NAMES.transcode, payload, {
-        // Using the payload's jobId as the BullMQ job ID is what gives us
-        // deduplication. BullMQ uses this as a Redis key — if it already exists,
-        // add() returns the existing Job object instead of creating a new entry.
-        jobId: payload.jobId,
-    });
+  const job = await queue.add(JOB_NAMES.transcode, payload, {
+    // Using the payload's jobId as the BullMQ job ID is what gives us
+    // deduplication. BullMQ uses this as a Redis key — if it already exists,
+    // add() returns the existing Job object instead of creating a new entry.
+    jobId: payload.jobId,
+  });
 
-    logger.info({
-        jobId: job.id,
-        filename: payload.filename,
-        queueName: QUEUE_NAMES.transcode,
-        deduplicated,
-    }, "Job enqueued");
+  logger.info(
+    {
+      jobId: job.id,
+      filename: payload.filename,
+      queueName: QUEUE_NAMES.transcode,
+      deduplicated,
+    },
+    'Job enqueued',
+  );
 
-    return {
-        jobId: payload.jobId,
-        queueName: QUEUE_NAMES.transcode,
-        deduplicated,
-    };
+  return {
+    jobId: payload.jobId,
+    queueName: QUEUE_NAMES.transcode,
+    deduplicated,
+  };
 }
 
 /**
@@ -232,20 +233,20 @@ export async function enqueueTranscodeJob(
  * queue depth is advisory information and must not fail an upload.
  * Returns -1 on error so callers can log the sentinel without crashing.
  */
-export async function getQueueDepth(
-    queue: Queue<TranscodeJob>,
-): Promise<number> {
-    try {
-        const counts = await queue.getJobCounts("waiting", "active", "delayed");
-        return (counts.waiting ?? 0) + (counts.active ?? 0) +
-            (counts.delayed ?? 0);
-    } catch (error) {
-        logger.error({
-            error,
-        }, "Failed to get queue depth");
-        // Swallow — depth is observability-only, never load-bearing
-        return -1;
-    }
+export async function getQueueDepth(queue: Queue<TranscodeJob>): Promise<number> {
+  try {
+    const counts = await queue.getJobCounts('waiting', 'active', 'delayed');
+    return (counts.waiting ?? 0) + (counts.active ?? 0) + (counts.delayed ?? 0);
+  } catch (error) {
+    logger.error(
+      {
+        error,
+      },
+      'Failed to get queue depth',
+    );
+    // Swallow — depth is observability-only, never load-bearing
+    return -1;
+  }
 }
 
 /**
@@ -254,13 +255,13 @@ export async function getQueueDepth(
  * Safe to call multiple times — subsequent calls are no-ops.
  */
 export async function closeQueue(
-    queue: Queue<TranscodeJob>,
-    redisConnection: IORedis,
+  queue: Queue<TranscodeJob>,
+  redisConnection: IORedis,
 ): Promise<void> {
-    await queue.close();
-    // ioredis rejects quit() on an already-closed connection rather than
-    // no-op'ing, so guard status to keep this call genuinely idempotent.
-    if (redisConnection.status !== "end") {
-        await redisConnection.quit();
-    }
+  await queue.close();
+  // ioredis rejects quit() on an already-closed connection rather than
+  // no-op'ing, so guard status to keep this call genuinely idempotent.
+  if (redisConnection.status !== 'end') {
+    await redisConnection.quit();
+  }
 }

@@ -1,17 +1,12 @@
-import { User } from "./payload-types";
+import { User } from './payload-types';
 
-export * from "./payload-types";
+export * from './payload-types';
 
 // ---------------------------------------------------------------------------
 // Job
 // ---------------------------------------------------------------------------
 
-export type JobStatus =
-  | "queued"
-  | "active"
-  | "completed"
-  | "failed"
-  | "delayed";
+export type JobStatus = 'queued' | 'active' | 'completed' | 'failed' | 'delayed';
 
 export interface TranscodeJob {
   /** Unique identifier for this job, used as the S3 key prefix. */
@@ -81,7 +76,7 @@ export interface HlsOutput {
 
 export interface UploadAcceptedResponse {
   jobId: string;
-  status: Extract<JobStatus, "queued">;
+  status: Extract<JobStatus, 'queued'>;
   message: string;
   data: {
     [property: string]: unknown;
@@ -99,15 +94,16 @@ export interface ErrorResponse {
 }
 
 export interface HealthResponse {
-  status: "ok" | "degraded";
-  dependencies?: Record<string, "ok" | "unreachable">;
+  status: 'ok' | 'degraded';
+  dependencies?: Record<string, 'ok' | 'unreachable'>;
 }
 
 export interface FireWebhookPayload {
-  event: "job.complete" | "job.failed";
-  status: Extract<JobStatus, "completed" | "failed">;
+  event: 'job.complete' | 'job.failed';
+  status: Extract<JobStatus, 'completed' | 'failed'>;
   jobId: string;
   error: string | null;
+  cause: string | null;
   data: {
     filename: string;
     durationMs: number;
@@ -117,11 +113,7 @@ export interface FireWebhookPayload {
   } | null;
 }
 
-export type onProgress = (progress: {
-  stage: number;
-  pct: number;
-  detail?: string;
-}) => void;
+export type onProgress = (progress: { stage: number; pct: number; detail?: string }) => void;
 
 export interface UploadResult {
   uploaded: string[];
@@ -133,14 +125,10 @@ export interface UploadResult {
 // ---------------------------------------------------------------------------
 
 /** Subscription tiers a user can hold. */
-export type SubscriptionStatus =
-  | "active"
-  | "inactive"
-  | "trialing"
-  | "past_due";
+export type SubscriptionStatus = 'active' | 'inactive' | 'trialing' | 'past_due';
 
 /** Roles that can be assigned to a user. */
-export type UserRole = "admin" | "user";
+export type UserRole = 'admin' | 'user';
 
 /**
  * The verified user profile returned by the auth service's token introspection
@@ -152,20 +140,15 @@ export type UserRole = "admin" | "user";
 export interface AuthenticatedUser extends User {
   /** The user's unique ID as assigned by the auth provider. */
   // id: string;
-
   // /** Human-readable identifier (email or username). */
   // email: string;
-
   // /** The user's assigned role. */
   // role: UserRole;
-
   // /** Current subscription status. */
   // subscription: SubscriptionStatus;
 }
 
-
-
-export type ErrorClass = "retriable" | "terminal";
+export type ErrorClass = 'retriable' | 'terminal';
 
 export interface ClassifiedError {
   class: ErrorClass;

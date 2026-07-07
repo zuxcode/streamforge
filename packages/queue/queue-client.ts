@@ -1,5 +1,3 @@
-
-
 // ---------------------------------------------------------------------------
 // queue-client.ts
 //
@@ -9,16 +7,11 @@
 //  - Only one Queue instance is used
 //  - Clean shutdown is supported
 // ---------------------------------------------------------------------------
-import {
-    closeQueue,
-    createRedisConnection,
-    createTranscodeQueue,
-    logConnection,
-} from "./setup";
-import type { TranscodeJob } from "@streamforge/types";
-import type { Queue } from "bullmq";
-import type IORedis from "ioredis";
-import { attachConnectionListeners } from "./utils";
+import { closeQueue, createRedisConnection, createTranscodeQueue, logConnection } from './setup';
+import type { TranscodeJob } from '@streamforge/types';
+import type { Queue } from 'bullmq';
+import type IORedis from 'ioredis';
+import { attachConnectionListeners } from './utils';
 
 /* =========================================================
  * Internal State (Singletons)
@@ -26,8 +19,6 @@ import { attachConnectionListeners } from "./utils";
 let connection: IORedis | null = null;
 let queue: Queue<TranscodeJob> | null = null;
 let connectionRedisUrl: string | null = null;
-
-
 
 /* =========================================================
  * Public API
@@ -43,21 +34,21 @@ let connectionRedisUrl: string | null = null;
  * connection is still returned rather than silently switched or thrown.
  */
 export function getTranscodeQueue(redisUrl: string): Queue<TranscodeJob> {
-    if (!connection) {
-        connection = createRedisConnection(redisUrl);
-        connectionRedisUrl = redisUrl;
-        attachConnectionListeners(connection);
-    } else if (redisUrl !== connectionRedisUrl) {
-        logConnection("Queue").error(
-            new Error(
-                `getTranscodeQueue called with a different redisUrl than the existing singleton connection was created with. The existing connection is still in use; the new redisUrl was ignored.`,
-            ),
-        );
-    }
-    if (!queue) {
-        queue = createTranscodeQueue(connection);
-    }
-    return queue;
+  if (!connection) {
+    connection = createRedisConnection(redisUrl);
+    connectionRedisUrl = redisUrl;
+    attachConnectionListeners(connection);
+  } else if (redisUrl !== connectionRedisUrl) {
+    logConnection('Queue').error(
+      new Error(
+        `getTranscodeQueue called with a different redisUrl than the existing singleton connection was created with. The existing connection is still in use; the new redisUrl was ignored.`,
+      ),
+    );
+  }
+  if (!queue) {
+    queue = createTranscodeQueue(connection);
+  }
+  return queue;
 }
 
 /**
@@ -69,20 +60,20 @@ export function getTranscodeQueue(redisUrl: string): Queue<TranscodeJob> {
  * and doesn't leak the connection reference.
  */
 export async function closeTranscodeQueue(): Promise<void> {
-    if (!queue && !connection) return;
+  if (!queue && !connection) return;
 
-    try {
-        if (queue && connection) {
-            await closeQueue(queue, connection);
-        } else if (connection) {
-            // Defensive: queue somehow null but connection isn't.
-            if (connection.status !== "end") {
-                await connection.quit();
-            }
-        }
-    } finally {
-        queue = null;
-        connection = null;
-        connectionRedisUrl = null;
+  try {
+    if (queue && connection) {
+      await closeQueue(queue, connection);
+    } else if (connection) {
+      // Defensive: queue somehow null but connection isn't.
+      if (connection.status !== 'end') {
+        await connection.quit();
+      }
     }
+  } finally {
+    queue = null;
+    connection = null;
+    connectionRedisUrl = null;
+  }
 }

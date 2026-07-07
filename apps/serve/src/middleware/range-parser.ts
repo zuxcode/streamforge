@@ -8,8 +8,8 @@ export interface ByteRange {
 }
 
 export type RangeParseResult =
-  | { ok: true;  range: ByteRange }
-  | { ok: false; reason: "absent" | "unsupported" | "invalid" | "unsatisfiable" };
+  | { ok: true; range: ByteRange }
+  | { ok: false; reason: 'absent' | 'unsupported' | 'invalid' | 'unsatisfiable' };
 
 /**
  * Parses a Range header value against a known file size.
@@ -23,47 +23,45 @@ export function parseRangeHeader(
   totalSize: number,
 ): RangeParseResult {
   if (!rangeHeader) {
-    return { ok: false, reason: "absent" };
+    return { ok: false, reason: 'absent' };
   }
 
-  if (!rangeHeader.startsWith("bytes=")) {
-    return { ok: false, reason: "unsupported" };
+  if (!rangeHeader.startsWith('bytes=')) {
+    return { ok: false, reason: 'unsupported' };
   }
 
-  const spec = rangeHeader.slice("bytes=".length);
+  const spec = rangeHeader.slice('bytes='.length);
 
   // Multiple ranges (e.g. "bytes=0-50, 100-150") are not supported
-  if (spec.includes(",")) {
-    return { ok: false, reason: "unsupported" };
+  if (spec.includes(',')) {
+    return { ok: false, reason: 'unsupported' };
   }
 
-  const [startStr, endStr] = spec.split("-");
+  const [startStr, endStr] = spec.split('-');
 
   // Suffix range: "bytes=-500" means last 500 bytes
-  if (startStr === "" && endStr !== undefined && endStr !== "") {
+  if (startStr === '' && endStr !== undefined && endStr !== '') {
     const suffixLength = parseInt(endStr, 10);
     if (Number.isNaN(suffixLength) || suffixLength <= 0) {
-      return { ok: false, reason: "invalid" };
+      return { ok: false, reason: 'invalid' };
     }
     const start = Math.max(0, totalSize - suffixLength);
     return { ok: true, range: { start, end: totalSize - 1 } };
   }
 
-  const start = parseInt(startStr ?? "", 10);
-  const end   = endStr === "" || endStr === undefined
-    ? totalSize - 1
-    : parseInt(endStr, 10);
+  const start = parseInt(startStr ?? '', 10);
+  const end = endStr === '' || endStr === undefined ? totalSize - 1 : parseInt(endStr, 10);
 
   if (Number.isNaN(start) || Number.isNaN(end)) {
-    return { ok: false, reason: "invalid" };
+    return { ok: false, reason: 'invalid' };
   }
 
   if (start < 0 || end < start) {
-    return { ok: false, reason: "invalid" };
+    return { ok: false, reason: 'invalid' };
   }
 
   if (start >= totalSize) {
-    return { ok: false, reason: "unsatisfiable" };
+    return { ok: false, reason: 'unsatisfiable' };
   }
 
   // Clamp end to file boundary

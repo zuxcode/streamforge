@@ -12,37 +12,37 @@
 //             Retrying will produce the same failure every time.
 // ---------------------------------------------------------------------------
 
-import { StorageKeyNotFoundError } from "@streamforge/storage";
-import type { ClassifiedError } from "@streamforge/types";
+import { StorageKeyNotFoundError } from '@streamforge/storage';
+import type { ClassifiedError } from '@streamforge/types';
 
 /**
  * ffmpeg exit codes that indicate a problem with the *input file* rather
  * than a transient system issue. These should not be retried.
  */
 const TERMINAL_FFMPEG_EXIT_CODES = new Set([
-  1,   // Generic error (usually codec/format issue)
-  69,  // ENOSYS — operation not supported (unsupported codec)
+  1, // Generic error (usually codec/format issue)
+  69, // ENOSYS — operation not supported (unsupported codec)
 ]);
 
 /**
  * Error message substrings that indicate a terminal ffmpeg failure.
  */
 const TERMINAL_FFMPEG_PATTERNS = [
-  "invalid data found",
-  "no such file or directory",
-  "unsupported codec",
-  "moov atom not found",    // Truncated/corrupt mp4
-  "end of file",            // Truncated input
-  "invalid argument",
-  "decoder not found",
+  'invalid data found',
+  'no such file or directory',
+  'unsupported codec',
+  'moov atom not found', // Truncated/corrupt mp4
+  'end of file', // Truncated input
+  'invalid argument',
+  'decoder not found',
 ];
 
 export function classifyError(err: unknown): ClassifiedError {
   // ── S3 key missing — the job references a file that doesn't exist ─────────
   if (err instanceof StorageKeyNotFoundError) {
     return {
-      class: "terminal",
-      code: "S3_KEY_NOT_FOUND",
+      class: 'terminal',
+      code: 'S3_KEY_NOT_FOUND',
       message: `Input video not found in S3: ${err.key}`,
       originalError: err,
     };
@@ -52,13 +52,11 @@ export function classifyError(err: unknown): ClassifiedError {
   if (err instanceof FfmpegError) {
     const isTerminal =
       TERMINAL_FFMPEG_EXIT_CODES.has(err.exitCode) ||
-      TERMINAL_FFMPEG_PATTERNS.some((p) =>
-        err.stderr.toLowerCase().includes(p)
-      );
+      TERMINAL_FFMPEG_PATTERNS.some((p) => err.stderr.toLowerCase().includes(p));
 
     return {
-      class: isTerminal ? "terminal" : "retriable",
-      code: isTerminal ? "FFMPEG_TERMINAL_ERROR" : "FFMPEG_TRANSIENT_ERROR",
+      class: isTerminal ? 'terminal' : 'retriable',
+      code: isTerminal ? 'FFMPEG_TERMINAL_ERROR' : 'FFMPEG_TRANSIENT_ERROR',
       message: `ffmpeg exited with code ${err.exitCode}`,
       originalError: err,
     };
@@ -68,16 +66,16 @@ export function classifyError(err: unknown): ClassifiedError {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
     if (
-      msg.includes("econnrefused") ||
-      msg.includes("econnreset") ||
-      msg.includes("etimedout") ||
-      msg.includes("socket hang up") ||
-      msg.includes("network") ||
-      msg.includes("timeout")
+      msg.includes('econnrefused') ||
+      msg.includes('econnreset') ||
+      msg.includes('etimedout') ||
+      msg.includes('socket hang up') ||
+      msg.includes('network') ||
+      msg.includes('timeout')
     ) {
       return {
-        class: "retriable",
-        code: "NETWORK_ERROR",
+        class: 'retriable',
+        code: 'NETWORK_ERROR',
         message: err.message,
         originalError: err,
       };
@@ -86,8 +84,8 @@ export function classifyError(err: unknown): ClassifiedError {
 
   // ── Unknown errors — treat as retriable to avoid silent data loss ─────────
   return {
-    class: "retriable",
-    code: "UNKNOWN_ERROR",
+    class: 'retriable',
+    code: 'UNKNOWN_ERROR',
     message: err instanceof Error ? err.message : String(err),
     originalError: err,
   };
@@ -103,7 +101,7 @@ export class FfmpegError extends Error {
 
   constructor(exitCode: number, stderr: string) {
     super(`ffmpeg exited with code ${exitCode}`);
-    this.name = "FfmpegError";
+    this.name = 'FfmpegError';
     this.exitCode = exitCode;
     this.stderr = stderr;
   }

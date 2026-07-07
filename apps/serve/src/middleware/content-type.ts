@@ -2,8 +2,8 @@
 // Pure function — no I/O, fully unit-testable.
 
 const CONTENT_TYPE_MAP: Record<string, string> = {
-  ".m3u8": "application/vnd.apple.mpegurl",
-  ".ts":   "video/MP2T",
+  '.m3u8': 'application/vnd.apple.mpegurl',
+  '.ts': 'video/MP2T',
 };
 
 /**
@@ -11,7 +11,7 @@ const CONTENT_TYPE_MAP: Record<string, string> = {
  * Returns null if the extension is not a recognised HLS type.
  */
 export function getContentType(filename: string): string | null {
-  const dot = filename.lastIndexOf(".");
+  const dot = filename.lastIndexOf('.');
   if (dot === -1) return null;
   const ext = filename.slice(dot).toLowerCase();
   return CONTENT_TYPE_MAP[ext] ?? null;

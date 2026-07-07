@@ -4,11 +4,11 @@
  * using FFmpeg. Uses Bun.spawn() — no child_process or promisify needed.
  */
 
-import { createLogger } from "@streamforge/logger";
-import { mkdir } from "node:fs/promises";
-import { join }  from "node:path";
+import { createLogger } from '@streamforge/logger';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 
-const logger = createLogger("transcode:worker:thumbnail");
+const logger = createLogger('transcode:worker:thumbnail');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -18,9 +18,9 @@ const logger = createLogger("transcode:worker:thumbnail");
  */
 async function runCapture(cmd: string, args: string[]): Promise<string> {
   const proc = Bun.spawn([cmd, ...args], {
-    stdin:  "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
+    stdin: 'ignore',
+    stdout: 'pipe',
+    stderr: 'pipe',
   });
 
   const [stdout, stderr, code] = await Promise.all([
@@ -30,7 +30,7 @@ async function runCapture(cmd: string, args: string[]): Promise<string> {
   ]);
 
   if (code !== 0) {
-    const tail = stderr.split("\n").slice(-10).join("\n");
+    const tail = stderr.split('\n').slice(-10).join('\n');
     throw new Error(`${cmd} exited with code ${code}:\n${tail}`);
   }
 
@@ -42,10 +42,13 @@ async function runCapture(cmd: string, args: string[]): Promise<string> {
  */
 async function getDuration(inputPath: string): Promise<number> {
   try {
-    const stdout = await runCapture("ffprobe", [
-      "-v", "error",
-      "-show_entries", "format=duration",
-      "-of", "default=noprint_wrappers=1:nokey=1",
+    const stdout = await runCapture('ffprobe', [
+      '-v',
+      'error',
+      '-show_entries',
+      'format=duration',
+      '-of',
+      'default=noprint_wrappers=1:nokey=1',
       inputPath,
     ]);
 
@@ -56,7 +59,7 @@ async function getDuration(inputPath: string): Promise<number> {
 
     return duration;
   } catch (error) {
-    logger.error(error, "Failed to get video duration", "function: getDuration");
+    logger.error(error, 'Failed to get video duration', 'function: getDuration');
     throw error;
   }
 }
@@ -101,7 +104,7 @@ export async function generateThumbnails({
   try {
     await mkdir(outputDir, { recursive: true });
   } catch (error) {
-    logger.error(error, `Failed to create directory ${outputDir}`, "function: generateThumbnails");
+    logger.error(error, `Failed to create directory ${outputDir}`, 'function: generateThumbnails');
     throw error;
   }
 
@@ -110,17 +113,15 @@ export async function generateThumbnails({
 
   // 15 % … 85 % spread avoids black frames at the edges
   const offsets =
-    count === 1
-      ? [0.5]
-      : Array.from({ length: count }, (_, i) => 0.15 + (i * 0.7) / (count - 1));
+    count === 1 ? [0.5] : Array.from({ length: count }, (_, i) => 0.15 + (i * 0.7) / (count - 1));
 
   const thumbnailPaths: string[] = [];
 
   try {
     for (let i = 0; i < offsets.length; i++) {
-      const seekSec  = (duration * offsets[i]).toFixed(3);
-      const filename = `thumb_${String(i + 1).padStart(2, "0")}.jpg`;
-      const outPath  = join(outputDir, filename);
+      const seekSec = (duration * offsets[i]).toFixed(3);
+      const filename = `thumb_${String(i + 1).padStart(2, '0')}.jpg`;
+      const outPath = join(outputDir, filename);
 
       logger.info(`Generating thumbnail ${i + 1}/${count} at ${seekSec}s → ${filename}`);
 
@@ -128,24 +129,27 @@ export async function generateThumbnails({
       // abort the entire batch and stderr is cleanly isolated per call.
       const proc = Bun.spawn(
         [
-          "ffmpeg",
-          "-ss",     seekSec,
-          "-i",      inputPath,
-          "-vframes", "1",
-          "-vf",     `scale=${width}:-1`,
-          "-q:v",    "3",   // JPEG quality (2 = best, 31 = worst)
-          "-y",      outPath,
+          'ffmpeg',
+          '-ss',
+          seekSec,
+          '-i',
+          inputPath,
+          '-vframes',
+          '1',
+          '-vf',
+          `scale=${width}:-1`,
+          '-q:v',
+          '3', // JPEG quality (2 = best, 31 = worst)
+          '-y',
+          outPath,
         ],
-        { stdin: "ignore", stdout: "ignore", stderr: "pipe" },
+        { stdin: 'ignore', stdout: 'ignore', stderr: 'pipe' },
       );
 
-      const [stderr, code] = await Promise.all([
-        new Response(proc.stderr).text(),
-        proc.exited,
-      ]);
+      const [stderr, code] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
 
       if (code !== 0) {
-        const tail = stderr.split("\n").slice(-10).join("\n");
+        const tail = stderr.split('\n').slice(-10).join('\n');
         throw new Error(`ffmpeg exited with code ${code} for frame ${i + 1}:\n${tail}`);
       }
 
@@ -155,7 +159,7 @@ export async function generateThumbnails({
     logger.info(`✅ Generated ${thumbnailPaths.length} thumbnail(s)`);
     return thumbnailPaths;
   } catch (error) {
-    logger.error(error, "Failed to generate thumbnails", "function: generateThumbnails");
+    logger.error(error, 'Failed to generate thumbnails', 'function: generateThumbnails');
     throw error;
   }
 }
