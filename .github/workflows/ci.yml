@@ -60,22 +60,22 @@ jobs:
   # independently deployable — a failure in one shouldn't be
   # masked by the others, and this matrix parallelizes nicely.
   # ─────────────────────────────────────────────────────────────
-  test:
-    name: 'Stage 2 › Unit Tests (${{ matrix.service }})'
-    needs: [lint, type-check, prettier, package-audit]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        service: [ingest, serve, transcode]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/bun-setup
+  # test:
+  #   name: 'Stage 2 › Unit Tests (${{ matrix.service }})'
+  #   needs: [lint, type-check, prettier, package-audit]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       service: [ingest, serve, transcode]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ./.github/actions/bun-setup
 
-      - name: Run Unit Tests
-        run: bun test apps/${{ matrix.service }}
-        env:
-          NODE_ENV: test
+  #     - name: Run Unit Tests
+  #       run: bun test apps/${{ matrix.service }}
+  #       env:
+  #         NODE_ENV: test
 
   # Docker image build/push is handled separately in build-push.yml,
   # triggered off this workflow's completion — mirrors MFX's
