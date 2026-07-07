@@ -13,15 +13,15 @@ COPY apps/serve/package.json ./apps/serve/
 COPY apps/ingest/package.json ./apps/ingest/
 COPY apps/transcode/package.json ./apps/transcode/
 
-COPY packages/auth/package.json ./packages/auth/
 COPY packages/env/package.json ./packages/env/
 COPY packages/logger/package.json ./packages/logger/
+COPY packages/payload/package.json ./packages/payload/
 COPY packages/queue/package.json ./packages/queue/
 COPY packages/storage/package.json ./packages/storage/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --prod
 
 # ---------------------------------------------------------------------------
 # Stage 2: build

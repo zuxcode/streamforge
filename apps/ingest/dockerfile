@@ -13,11 +13,9 @@ COPY apps/serve/package.json ./apps/serve/
 COPY apps/ingest/package.json ./apps/ingest/
 COPY apps/transcode/package.json ./apps/transcode/
 
-COPY packages/auth/package.json ./packages/auth/
-
-COPY packages/payload/package.json ./packages/payload/
 COPY packages/env/package.json ./packages/env/
 COPY packages/logger/package.json ./packages/logger/
+COPY packages/payload/package.json ./packages/payload/
 COPY packages/queue/package.json ./packages/queue/
 COPY packages/storage/package.json ./packages/storage/
 COPY packages/types/package.json ./packages/types/
