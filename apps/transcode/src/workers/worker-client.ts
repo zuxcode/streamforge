@@ -8,33 +8,25 @@
 //  - Webhook notifications
 // ---------------------------------------------------------------------------
 
-import { type Job, UnrecoverableError, Worker } from "bullmq";
-import type IORedis from "ioredis";
-import {
-  createRedisConnection,
-  logConnection,
-  QUEUE_NAMES,
-} from "@streamforge/queue";
+import { type Job, UnrecoverableError, Worker } from 'bullmq';
+import type IORedis from 'ioredis';
+import { createRedisConnection, logConnection, QUEUE_NAMES } from '@streamforge/queue';
 
-import type {
-  FireWebhookPayload,
-  onProgress,
-  TranscodeJob,
-} from "@streamforge/types";
-import { payloadClient } from "@streamforge/payload";
+import type { FireWebhookPayload, onProgress, TranscodeJob } from '@streamforge/types';
+import { payloadClient } from '@streamforge/payload';
 
-import { transcodeEnv as env } from "@streamforge/env";
-import { createLogger } from "@streamforge/logger";
-import { attachConnectionListeners } from "@streamforge/queue";
-import { processHls } from "../processors/hls-processor";
-import { classifyError } from "../utils/error-classifier";
+import { transcodeEnv as env } from '@streamforge/env';
+import { createLogger } from '@streamforge/logger';
+import { attachConnectionListeners } from '@streamforge/queue';
+import { processHls } from '../processors/hls-processor';
+import { classifyError } from '../utils/error-classifier';
 
 const transcodeEnv = env();
 
 /* =========================================================
  * Logger
  * ======================================================= */
-const logger = createLogger("worker");
+const logger = createLogger('worker');
 
 /* =========================================================
  * Singleton State
@@ -63,9 +55,9 @@ export function getRedisConnection(redisUrl: string): IORedis {
     // Attach listeners only on first creation — attaching on every call
     // would stack duplicate listeners on subsequent calls, causing
     // multiplied log lines / webhook fires as the process runs.
-    attachConnectionListeners(connection, "Worker");
+    attachConnectionListeners(connection, 'Worker');
   } else if (redisUrl !== connectionRedisUrl) {
-    logConnection("Queue").error(
+    logConnection('Queue').error(
       new Error(
         `
                 getTranscodeQueue called with a different redisUrl than the existing singleton connection 
@@ -83,18 +75,18 @@ export function getRedisConnection(redisUrl: string): IORedis {
  * ======================================================= */
 async function fireWebhook(url: string, payload: FireWebhookPayload) {
   if (!url) {
-    logger.warn("webhook not configured");
+    logger.warn('webhook not configured');
     return;
   }
 
   const client = payloadClient({
     token: transcodeEnv.SERVER_API_KEY,
-    strategy: "apiKey",
+    strategy: 'apiKey',
   });
 
   try {
     const res = await client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       json: JSON.stringify(payload),
     });
@@ -108,7 +100,7 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
           statusText: res.statusText,
           error,
         },
-        "webhook delivery failed",
+        'webhook delivery failed',
       );
 
       return;
@@ -119,7 +111,7 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
         url,
         status: res.status,
       },
-      "webhook delivered",
+      'webhook delivered',
     );
   } catch (err) {
     logger.warn(
@@ -128,7 +120,7 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
         error: err instanceof Error ? err.message : String(err),
         cause: err instanceof Error ? err.cause : String(err),
       },
-      "webhook failed",
+      'webhook failed',
     );
   }
 }
@@ -153,7 +145,7 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
             bullmqJobId: job.id,
             attempts: job.attemptsMade,
           },
-          "job started",
+          'job started',
         );
 
         try {
@@ -176,7 +168,7 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
             wallClockMs: Date.now() - start,
           };
 
-          logger.info(loggerPayload, "job completed");
+          logger.info(loggerPayload, 'job completed');
 
           return result;
         } catch (err) {
@@ -191,7 +183,7 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
               message: classified.message,
               durationMs: Date.now() - start,
             },
-            "job failed",
+            'job failed',
           );
 
           /* ---------------- Terminal Failure ---------------- */
@@ -200,7 +192,7 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
           // listener below (see the dedupe note there), not here,
           // so there's a single place that decides "job failed for
           // good" and fires exactly one webhook for it.
-          if (classified.class === "terminal") {
+          if (classified.class === 'terminal') {
             // Throwing BullMQ's actual UnrecoverableError is what
             // stops retries — a plain Error with .name reassigned
             // to the string "UnrecoverableError" does NOT trigger
@@ -226,31 +218,31 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
      * Worker Events (attached only on first creation — see note
      * on getRedisConnection above for why this matters)
      * ======================================================= */
-    worker.on("error", (err) => {
+    worker.on('error', (err) => {
       logger.error(
         {
           error: err instanceof Error ? err.message : String(err),
           cause: err instanceof Error ? err.cause : String(err),
         },
-        "worker error",
+        'worker error',
       );
     });
 
-    worker.on("stalled", (jobId) => {
-      logger.warn({ jobId }, "job stalled");
+    worker.on('stalled', (jobId) => {
+      logger.warn({ jobId }, 'job stalled');
     });
 
-    worker.on("completed", (job, result) => {
+    worker.on('completed', (job, result) => {
       logger.info(
         {
           jobId: job.id,
           manifest: result.manifestKey,
         },
-        "job completed event",
+        'job completed event',
       );
       if (transcodeEnv.TRANSCODE_WEBHOOK_PATH) {
         void fireWebhook(transcodeEnv.TRANSCODE_WEBHOOK_PATH, {
-          event: "job.complete",
+          event: 'job.complete',
           jobId: job.id as string,
           error: null,
           cause: null,
@@ -259,17 +251,17 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
             filename: result.filename,
             manifestKey: result.manifestKey,
             mediaId: result.mediaId,
-            thumbnailKey: "thumbnailKey" in result &&
-                typeof result.thumbnailKey === "string"
-              ? result.thumbnailKey
-              : undefined,
+            thumbnailKey:
+              'thumbnailKey' in result && typeof result.thumbnailKey === 'string'
+                ? result.thumbnailKey
+                : undefined,
           },
-          status: "completed",
+          status: 'completed',
         });
       }
     });
 
-    worker.on("failed", (job, err) => {
+    worker.on('failed', (job, err) => {
       logger.error(
         {
           jobId: job?.id,
@@ -277,7 +269,7 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
           error: err.message,
           cause: err.cause,
         },
-        "job failed event",
+        'job failed event',
       );
 
       if (!job || !transcodeEnv.TRANSCODE_WEBHOOK_PATH) return;
@@ -294,12 +286,12 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
 
       if (isTerminal || attemptsExhausted) {
         void fireWebhook(transcodeEnv.TRANSCODE_WEBHOOK_PATH, {
-          event: "job.failed",
+          event: 'job.failed',
           jobId: job.id as string,
           error: err.message,
           cause: err instanceof Error ? (err.cause as string) : String(err),
           data: null,
-          status: "failed",
+          status: 'failed',
         });
       }
     });
@@ -323,7 +315,7 @@ export async function closeTranscodeWorker(): Promise<void> {
   }
 
   try {
-    if (connection && connection.status !== "end") {
+    if (connection && connection.status !== 'end') {
       await connection.quit();
     }
   } finally {
