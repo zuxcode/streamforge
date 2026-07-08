@@ -12,6 +12,7 @@ export const transcodeEnv = () =>
       TRANSCODE_TMP_DIR: z.string().default('./tmp/streamforge'),
       TRANSCODE_SEGMENT_DURATION: z.coerce.number().default(6),
       TRANSCODE_WEBHOOK_URL: z.url().optional(),
+      TRANSCODE_WEBHOOK_PATH: z.string().optional(),
       OUTPUT_DIR: z.string().default('processed'),
     },
 
