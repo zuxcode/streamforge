@@ -52,9 +52,7 @@ export function payloadClient({
   } satisfies StrategyMap;
 
   const timeoutSignal = AbortSignal.timeout(timeoutMs);
-  const combinedSignal = signal
-    ? AbortSignal.any([signal, timeoutSignal])
-    : timeoutSignal;
+  const combinedSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 
   return new PayloadSDK<Config>({
     baseURL: payloadEnv().SERVER_ENDPOINT,

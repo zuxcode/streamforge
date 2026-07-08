@@ -6,7 +6,7 @@ export async function authMiddleware(c: Context, next: Next): Promise<Response |
   const client = payloadClient({
     token: serveEnv().SERVER_API_KEY,
     strategy: 'apiKey',
-    timeoutMs: 5000
+    timeoutMs: 5000,
   });
 
   try {
