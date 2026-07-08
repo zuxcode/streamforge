@@ -86,7 +86,7 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
 
   try {
     const res = await client.request({
-      method: 'POST',
+      method: 'PATCH',
       path: url,
       json: JSON.stringify(payload),
     });
