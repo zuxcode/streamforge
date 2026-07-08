@@ -88,7 +88,7 @@ async function fireWebhook(url: string, payload: FireWebhookPayload) {
     const res = await client.fetch(url, {
       method: 'POST',
       body: JSON.stringify(payload),
-      headers: [[ "Authorization", `users API-Key ${transcodeEnv.SERVER_API_KEY}`,]],
+      headers: [['Authorization', `users API-Key ${transcodeEnv.SERVER_API_KEY}`]],
     });
 
     if (!res.ok) {
