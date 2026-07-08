@@ -233,6 +233,10 @@ export function createTranscodeWorker(): Worker<TranscodeJob> {
     });
 
     worker.on('completed', (job, result) => {
+      job.log('job completed successfully');
+      job.updateProgress(100);
+      job.log(result);
+      logger.info(result);
       logger.info(
         {
           jobId: job.id,
