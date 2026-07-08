@@ -19,6 +19,7 @@
     "@streamforge/storage": "workspace:*",
     "@streamforge/types": "workspace:*",
     "@streamforge/utils": "workspace:*",
+    "@streamforge/payload": "workspace:*",
     "bullmq": "5.79.2",
     "ioredis": "5.10.1",
     "p-limit": "7.3.0"

@@ -52,6 +52,7 @@
       "dependencies": {
         "@streamforge/env": "workspace:*",
         "@streamforge/logger": "workspace:*",
+        "@streamforge/payload": "workspace:*",
         "@streamforge/queue": "workspace:*",
         "@streamforge/storage": "workspace:*",
         "@streamforge/types": "workspace:*",
